@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba de Transformación de Coordenadas POSGAR94 → POSGAR2007</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .resultado {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0d6efd;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    .coordenada-original {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    .coordenada-transformada {
+      color: #198754;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h1 class="h4 mb-0">🔄 Prueba de Transformación de Coordenadas</h1>
+            <p class="mb-0 small">POSGAR 94 → POSGAR 2007</p>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">
+              <strong>ℹ️ Información:</strong>
+              <p class="mb-0">Esta herramienta permite probar la transformación de coordenadas de POSGAR 94 a POSGAR 2007 usando los parámetros oficiales del IGN para la región de San Juan.</p>
+            </div>
+
+            <form id="formTransformacion">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Sistema de Coordenadas de Origen</label>
+                  <select id="sistemaOrigen" class="form-select">
+                    <option value="posgar2007">POSGAR 2007 (EPSG:5344)</option>
+                    <option value="posgar94" selected>POSGAR 94 (EPSG:22182)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Este (X)</label>
+                  <input type="number" id="este" class="form-control" step="0.01" 
+                         placeholder="Ej: 2457558.74" value="2457558.74" required>
+                  <small class="text-muted">Coordenada Este en metros</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Norte (Y)</label>
+                  <input type="number" id="norte" class="form-control" step="0.01" 
+                         placeholder="Ej: 6557062.97" value="6557062.97" required>
+                  <small class="text-muted">Coordenada Norte en metros</small>
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  🔄 Transformar Coordenadas
+                </button>
+              </div>
+            </form>
+
+            <div id="resultado" style="display: none;" class="resultado mt-4">
+              <h5 class="text-primary mb-3">📊 Resultados de la Transformación</h5>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <h6 class="card-title coordenada-original">
+                        📍 Coordenadas Originales
+                      </h6>
+                      <p class="card-text mb-1">
+                        <strong>Sistema:</strong> <span id="sistemaOrigenText"></span>
+                      </p>
+                      <p class="card-text mb-1">
+                        <strong>Este:</strong> <span id="esteOriginal"></span> m
+                      </p>
+                      <p class="card-text mb-0">
+                        <strong>Norte:</strong> <span id="norteOriginal"></span> m
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <h6 class="card-title coordenada-transformada">
+                        📍 Coordenadas Transformadas
+                      </h6>
+                      <p class="card-text mb-1">
+                        <strong>Sistema:</strong> POSGAR 2007
+                      </p>
+                      <p class="card-text mb-1">
+                        <strong>Este:</strong> <span id="esteTransformado"></span> m
+                      </p>
+                      <p class="card-text mb-0">
+                        <strong>Norte:</strong> <span id="norteTransformado"></span> m
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-success mt-3">
+                <h6 class="mb-2">✅ Correcciones Aplicadas:</h6>
+                <p class="mb-1">
+                  <strong>Δ Este:</strong> <span id="deltaEste"></span> m
+                </p>
+                <p class="mb-0">
+                  <strong>Δ Norte:</strong> <span id="deltaNorte"></span> m
+                </p>
+              </div>
+
+              <div class="alert alert-info mt-3" id="mensaje">
+                <strong>ℹ️ </strong><span id="mensajeText"></span>
+              </div>
+            </div>
+
+            <div id="error" style="display: none;" class="alert alert-danger mt-4">
+              <strong>❌ Error:</strong> <span id="errorText"></span>
+            </div>
+          </div>
+
+          <div class="card-footer text-muted">
+            <small>
+              <strong>Parámetros de transformación:</strong> 
+              Δ Este = +0.031 m | Δ Norte = +0.146 m<br>
+              <strong>Fuente:</strong> Instituto Geográfico Nacional (IGN) - Región San Juan
+            </small>
+          </div>
+        </div>
+
+        <!-- Ejemplos de coordenadas -->
+        <div class="card mt-4">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">📋 Ejemplos de Coordenadas</h5>
+          </div>
+          <div class="card-body">
+            <p class="mb-2"><strong>Ejemplos de coordenadas para probar (POSGAR 94):</strong></p>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Ubicación</th>
+                  <th>Este (X)</th>
+                  <th>Norte (Y)</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Punto 1</td>
+                  <td>2457558.74</td>
+                  <td>6557062.97</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="cargarEjemplo(2457558.74, 6557062.97)">
+                      Cargar
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Punto 2</td>
+                  <td>2458158.71</td>
+                  <td>6557062.97</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="cargarEjemplo(2458158.71, 6557062.97)">
+                      Cargar
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Punto 3</td>
+                  <td>2459358.71</td>
+                  <td>6556662.98</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="cargarEjemplo(2459358.71, 6556662.98)">
+                      Cargar
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function cargarEjemplo(este, norte) {
+      document.getElementById('este').value = este;
+      document.getElementById('norte').value = norte;
+      document.getElementById('sistemaOrigen').value = 'posgar94';
+    }
+
+    document.getElementById('formTransformacion').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const este = parseFloat(document.getElementById('este').value);
+      const norte = parseFloat(document.getElementById('norte').value);
+      const sistema = document.getElementById('sistemaOrigen').value;
+      
+      // Ocultar mensajes previos
+      document.getElementById('resultado').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+      
+      try {
+        const response = await fetch(`transformar_coordenadas.php?este=${este}&norte=${norte}&sistema=${sistema}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Mostrar resultados
+          document.getElementById('sistemaOrigenText').textContent = data.sistema_origen;
+          document.getElementById('esteOriginal').textContent = data.este_original.toFixed(2);
+          document.getElementById('norteOriginal').textContent = data.norte_original.toFixed(2);
+          document.getElementById('esteTransformado').textContent = data.este_transformado.toFixed(2);
+          document.getElementById('norteTransformado').textContent = data.norte_transformado.toFixed(2);
+          document.getElementById('deltaEste').textContent = data.delta_este.toFixed(3);
+          document.getElementById('deltaNorte').textContent = data.delta_norte.toFixed(3);
+          document.getElementById('mensajeText').textContent = data.mensaje;
+          
+          document.getElementById('resultado').style.display = 'block';
+        } else {
+          document.getElementById('errorText').textContent = data.error || 'Error desconocido';
+          document.getElementById('error').style.display = 'block';
+        }
+      } catch (error) {
+        document.getElementById('errorText').textContent = 'Error al conectar con el servidor: ' + error.message;
+        document.getElementById('error').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
