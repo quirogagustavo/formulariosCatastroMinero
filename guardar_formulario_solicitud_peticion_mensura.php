@@ -38,7 +38,6 @@ if(!$multipoligonos){
     die("No se recibieron pertenencias válidas");
 }
 
-
 function next_id($db, $tabla, $campo){
   $res = pg_query($db,"SELECT COALESCE(MAX($campo),0)+1 AS id FROM $tabla");
   $row = pg_fetch_assoc($res);
