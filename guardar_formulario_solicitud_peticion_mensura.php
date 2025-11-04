@@ -38,6 +38,21 @@ if(!$multipoligonos){
     die("No se recibieron pertenencias válidas");
 }
 
+// Función para detectar si las coordenadas son POSGAR 94 o POSGAR 2007
+function detectarSistemaCoordenadas($coords) {
+    // POSGAR 94 y POSGAR 2007 ambos usan rangos X entre 6600000-6800000 para Faja 2
+    // pero por defecto asumimos que cualquier coordenada ingresada es POSGAR 94
+    // y la transformaremos a POSGAR 2007 (aunque la diferencia sea mínima)
+    if (isset($coords[0])) {
+        $x = floatval($coords[0]['x'] ?? $coords[0][0] ?? 0);
+        // Si las coordenadas están en el rango típico de Faja 2, son POSGAR 94
+        if ($x > 6000000 && $x < 7000000) {
+            return 22182; // POSGAR 94 - transformar a POSGAR 2007
+        }
+    }
+    return 5344; // Ya está en POSGAR 2007
+}
+
 function next_id($db, $tabla, $campo){
   $res = pg_query($db,"SELECT COALESCE(MAX($campo),0)+1 AS id FROM $tabla");
   $row = pg_fetch_assoc($res);
@@ -52,6 +67,10 @@ foreach($solicitudes as $s){
     // WKT
     $coords = array_map(fn($v)=>[$v['x'],$v['y']], $s['vertices'] ?? []);
     if(count($coords) < 3) continue;
+    
+    // Detectar sistema de coordenadas
+    $srid_origen = detectarSistemaCoordenadas($s['vertices']);
+    
     if($coords[0] !== end($coords)) $coords[] = $coords[0];
     $coords_wkt = array_map(fn($c)=>implode(' ',$c), $coords);
     $wkt = "POLYGON((" . implode(',', $coords_wkt) . "))";
@@ -60,9 +79,16 @@ foreach($solicitudes as $s){
     $sup_decl    = isset($s['sup_decl'])    ? floatval($s['sup_decl'])    : 0;
     $id_pol    =  $s['id_mensura'];
 
-    $q = "INSERT INTO registro_grafico.gra_cm_mensura_area_pga07
-            (mensar_id, expte_siged, fecha_solicitud, depto, tipo_yac, geom, sup_graf_ha, sup_decla_ha, denom, sup_decla_men_ha, id_pol)
-          VALUES ($1,$2,$3,$4,$5, ST_GeomFromText($6,5344), $7, $8, $9, $10, $11)";
+    // Si es POSGAR 94 (22182), transformar a POSGAR 2007 (5344)
+    if ($srid_origen == 22182) {
+        $q = "INSERT INTO registro_grafico.gra_cm_mensura_area_pga07
+                (mensar_id, expte_siged, fecha_solicitud, depto, tipo_yac, geom, sup_graf_ha, sup_decla_ha, denom, sup_decla_men_ha, id_pol)
+              VALUES ($1,$2,$3,$4,$5, ST_Transform(ST_GeomFromText($6,22182), 5344), $7, $8, $9, $10, $11)";
+    } else {
+        $q = "INSERT INTO registro_grafico.gra_cm_mensura_area_pga07
+                (mensar_id, expte_siged, fecha_solicitud, depto, tipo_yac, geom, sup_graf_ha, sup_decla_ha, denom, sup_decla_men_ha, id_pol)
+              VALUES ($1,$2,$3,$4,$5, ST_GeomFromText($6,5344), $7, $8, $9, $10, $11)";
+    }
 
     $p = [
         $mensura_id,
@@ -92,13 +118,24 @@ foreach($multipoligonos as $pert){
     $sup_decl    = isset($pert['sup_decl'])    ? floatval($pert['sup_decl'])    : 0;
 
     $coords = array_map(fn($v)=>[$v['x'],$v['y']], $pert['vertices']);
+    
+    // Detectar sistema de coordenadas
+    $srid_origen = detectarSistemaCoordenadas($pert['vertices']);
+    
     if($coords[0] !== end($coords)) $coords[] = $coords[0]; // cerrar polígono
     $coords_wkt = array_map(fn($c)=>implode(' ',$c), $coords);
     $wkt = "POLYGON((" . implode(',', $coords_wkt) . "))";
 
-    $q = "INSERT INTO registro_grafico.gra_cm_mensura_pertenencias_pga07
-            (mens_id, id_pol, id_pert, geom, sup_graf_ha, sup_solic_ha, denom, sup_decla_men_ha, tipo_yac, expte_siged)
-          VALUES ($1,$2,$3, ST_GeomFromText($4,5344), $5, $6, $7, $8, $9, $10)";
+    // Si es POSGAR 94 (22182), transformar a POSGAR 2007 (5344)
+    if ($srid_origen == 22182) {
+        $q = "INSERT INTO registro_grafico.gra_cm_mensura_pertenencias_pga07
+                (mens_id, id_pol, id_pert, geom, sup_graf_ha, sup_solic_ha, denom, sup_decla_men_ha, tipo_yac, expte_siged)
+              VALUES ($1,$2,$3, ST_Transform(ST_GeomFromText($4,22182), 5344), $5, $6, $7, $8, $9, $10)";
+    } else {
+        $q = "INSERT INTO registro_grafico.gra_cm_mensura_pertenencias_pga07
+                (mens_id, id_pol, id_pert, geom, sup_graf_ha, sup_solic_ha, denom, sup_decla_men_ha, tipo_yac, expte_siged)
+              VALUES ($1,$2,$3, ST_GeomFromText($4,5344), $5, $6, $7, $8, $9, $10)";
+    }
 
     $p = [$pert_id,$id_sol,$id_pert,$wkt,$sup_graf_ha,$sup_decl,$denominacion, $superficie_mensura, $tipo_yacimiento, $exp_siged];
 
