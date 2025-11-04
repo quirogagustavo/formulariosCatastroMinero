@@ -375,6 +375,7 @@ if (!isset($_SESSION['usuario'])) {
       
       <input type="hidden" name="solicitudes_mensura" id="solicitudes_mensura">
       <input type="hidden" name="multipoligonos" id="multipoligonos">
+      <input type="hidden" name="sistema_coordenadas" id="sistema_coordenadas_hidden">
       
       <!-- Vista previa de transformación de coordenadas -->
       <div id="preview-transformacion" class="mt-3" style="display: none;"></div>
@@ -796,6 +797,10 @@ function prepararEnvio(){
   if (!validarSecuenciaPoligonos()) {
     return false;
   }
+
+  // Capturar el sistema de coordenadas seleccionado
+  const sistemaCoordenadas = document.getElementById("sistema-coordenadas").value;
+  document.getElementById("sistema_coordenadas_hidden").value = sistemaCoordenadas;
 
   document.getElementById("solicitudes_mensura").value = JSON.stringify(solicitudesMensura);
   document.getElementById("multipoligonos").value = JSON.stringify(multipoligonos);
