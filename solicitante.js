@@ -12,10 +12,10 @@ let contadorSolicitantes = 0;
       <input type="text" name="cuit[]" class="form-control cuit-input" placeholder="CUIT del solicitante (opcional)">
     </div>
     <div class="col-md-6">
-      <input type="text" name="solicitante[]" class="form-control nombre-input" placeholder="Nombre o Razón Social" required>
+      <input type="text" name="solicitante[]" class="form-control nombre-input" placeholder="Nombre o Razón Social (opcional)">
     </div>
     <div class="col-md-2">
-      <input type="text" name="tipo[]" class="form-control tipo-input" placeholder="Tipo" required readonly>
+      <input type="text" name="tipo[]" class="form-control tipo-input" placeholder="Tipo (opcional)" readonly>
     </div>
     <div class="col-md-1 d-flex align-items-center">
       <button type="button" class="btn btn-danger btn-sm" onclick="eliminarSolicitante(this)">X</button>
