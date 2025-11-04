@@ -284,7 +284,7 @@ if (!isset($_SESSION['usuario'])) {
     <h6><strong>📋 NORMATIVA CATASTRAL - Secuencia de Vértices:</strong></h6>
     <ul class="mb-0">
       <li><strong>Primer vértice:</strong> Debe ser el punto más al NOROESTE (mayor Norte, menor Este en caso de empate)</li>
-      <li><strong>Secuencia:</strong> Continuar en sentido ANTIHORARIO (contrario a las manecillas del reloj)</li>
+      <li><strong>Secuencia:</strong> Continuar en sentido HORARIO (como las manecillas del reloj)</li>
       <li><strong>Herramientas:</strong> Use los botones "🔍 Validar Secuencia" y "🔧 Corregir Orden" para verificar y corregir automáticamente</li>
     </ul>
   </div>
@@ -464,11 +464,11 @@ if (!isset($_SESSION['usuario'])) {
             }
         }
         
-        // 3. Verificar orientación antihoraria
+        // 3. Verificar orientación horaria
         const area = calcularAreaConSigno(puntos);
-        if (area < 0) {
-            if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido HORARIO.\n\n` +
-                       `Los vértices deben seguir el sentido ANTIHORARIO (contrario a las manecillas del reloj).\n\n` +
+        if (area > 0) {
+            if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
+                       `Los vértices deben seguir el sentido HORARIO (como las manecillas del reloj).\n\n` +
                        `¿Desea invertir automáticamente el orden de los puntos?`)) {
                 invertirOrdenPuntos();
                 return false;
@@ -506,7 +506,7 @@ if (!isset($_SESSION['usuario'])) {
             puntos = [primero, ...resto];
             actualizarListaPuntos();
             dibujarPoligono();
-            alert(`✅ Orden de puntos invertido a sentido antihorario.\n\nPor favor revise la secuencia y vuelva a enviar.`);
+            alert(`✅ Orden de puntos invertido a sentido horario.\n\nPor favor revise la secuencia y vuelva a enviar.`);
         }
     }
     
@@ -553,9 +553,9 @@ if (!isset($_SESSION['usuario'])) {
             mensaje += "❌ Error: El primer punto NO es el noroeste\n";
         }
         
-        mensaje += `🔄 Orientación: ${area < 0 ? "❌ HORARIO (incorrecto)" : "✅ ANTIHORARIO (correcto)"}\n\n`;
+        mensaje += `🔄 Orientación: ${area > 0 ? "❌ ANTIHORARIO (incorrecto)" : "✅ HORARIO (correcto)"}\n\n`;
         
-        if (puntoNoroeste !== 0 || area < 0) {
+        if (puntoNoroeste !== 0 || area > 0) {
             mensaje += "🔧 Use el botón 'Corregir Orden' para solucionarlo automáticamente.";
         } else {
             mensaje += "🎉 ¡Secuencia correcta! Los puntos siguen la normativa catastral.";
@@ -588,13 +588,13 @@ if (!isset($_SESSION['usuario'])) {
             cambiosRealizados.push("✅ Reordenado desde punto noroeste");
         }
         
-        // 2. Verificar y corregir orientación antihoraria
+        // 2. Verificar y corregir orientación horaria
         const area = calcularAreaConSigno(puntos);
-        if (area < 0) {
+        if (area > 0) {
             const primero = puntos[0];
             const resto = puntos.slice(1).reverse();
             puntos = [primero, ...resto];
-            cambiosRealizados.push("✅ Invertido a sentido antihorario");
+            cambiosRealizados.push("✅ Invertido a sentido horario");
         }
         
         // 3. Actualizar interfaz

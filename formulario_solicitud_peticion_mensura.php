@@ -290,7 +290,7 @@ if (!isset($_SESSION['usuario'])) {
     <h6><strong>📋 NORMATIVA CATASTRAL - Secuencia de Vértices:</strong></h6>
     <ul class="mb-0">
       <li><strong>Primer vértice:</strong> Debe ser el punto más al NOROESTE (mayor Norte, menor Este en caso de empate)</li>
-      <li><strong>Secuencia:</strong> Continuar en sentido ANTIHORARIO (contrario a las manecillas del reloj)</li>
+      <li><strong>Secuencia:</strong> Continuar en sentido HORARIO (como las manecillas del reloj)</li>
       <li><strong>Importante:</strong> Esta normativa aplica tanto para el perímetro de mensura como para las pertenencias</li>
     </ul>
   </div>
@@ -767,7 +767,7 @@ function validarSecuenciaPoligonos() {
                    `Para corregir:\n` +
                    `1. Edite los archivos CSV\n` +
                    `2. Asegúrese de que cada polígono comience desde el vértice noroeste\n` +
-                   `3. Los vértices deben seguir orden antihorario\n` +
+                   `3. Los vértices deben seguir orden horario\n` +
                    `4. Vuelva a importar los archivos`;
     
     if (confirm(mensaje + `\n\n¿Desea continuar de todos modos? (No recomendado)`)) {
@@ -809,8 +809,8 @@ function validarSecuenciaPoligono(vertices, nombre) {
     errores.push(`❌ El primer vértice NO es el noroeste (debería ser el vértice ${puntoNoroeste + 1})`);
   }
   
-  if (area < 0) {
-    errores.push(`❌ Los vértices están en sentido HORARIO (deben ir en sentido antihorario)`);
+  if (area > 0) {
+    errores.push(`❌ Los vértices están en sentido ANTIHORARIO (deben ir en sentido horario)`);
   }
   
   if (errores.length > 0) {
