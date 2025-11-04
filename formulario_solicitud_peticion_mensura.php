@@ -341,6 +341,28 @@ if (!isset($_SESSION['usuario'])) {
         </div>
       </div>
 
+      <!-- Tabla de puntos ingresados manualmente -->
+      <div class="row mt-3" id="tabla-puntos-container" style="display: none;">
+        <div class="col-12">
+          <h6>Puntos ingresados:</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered">
+              <thead class="table-dark">
+                <tr>
+                  <th style="width: 10%;">Vértice</th>
+                  <th style="width: 35%;">ESTE</th>
+                  <th style="width: 35%;">NORTE</th>
+                  <th style="width: 20%;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-puntos-body">
+                <!-- Se llenará dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="col-12 mt-3">
         <div class="d-flex gap-2">
           <button type="button" onclick="analizarPoligonosImportados()" class="btn btn-info">
@@ -534,6 +556,7 @@ function agregarPuntoManual(){
     return;
   }
   manualVertices.push({ id_v: manualVertices.length + 1, x, y });
+  actualizarTablaPuntosManual();
   dibujarTemporalManual();
   ix.value = '';
   iy.value = '';
@@ -545,13 +568,54 @@ function eliminarUltimoPuntoManual(){
     return;
   }
   manualVertices.pop();
+  actualizarTablaPuntosManual();
   dibujarTemporalManual();
+}
+
+function eliminarPuntoManualPorIndice(indice){
+  if (confirm(`¿Está seguro de eliminar el vértice ${indice + 1}?`)){
+    manualVertices.splice(indice, 1);
+    // Renumerar vértices
+    manualVertices.forEach((v, i) => v.id_v = i + 1);
+    actualizarTablaPuntosManual();
+    dibujarTemporalManual();
+  }
+}
+
+function actualizarTablaPuntosManual(){
+  const container = document.getElementById('tabla-puntos-container');
+  const tbody = document.getElementById('tabla-puntos-body');
+  
+  if (manualVertices.length === 0){
+    container.style.display = 'none';
+    tbody.innerHTML = '';
+    return;
+  }
+  
+  container.style.display = 'block';
+  tbody.innerHTML = '';
+  
+  manualVertices.forEach((punto, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="text-center"><strong>V${punto.id_v}</strong></td>
+      <td>${punto.x.toFixed(2)}</td>
+      <td>${punto.y.toFixed(2)}</td>
+      <td class="text-center">
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoManualPorIndice(${index})" title="Eliminar punto">
+          🗑️
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function limpiarPoligonoManual(){
   manualVertices = [];
   manualLayers.forEach(l=>map.removeLayer(l));
   manualLayers = [];
+  actualizarTablaPuntosManual();
 }
 
 function dibujarTemporalManual(){

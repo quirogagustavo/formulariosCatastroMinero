@@ -5,10 +5,6 @@ if (!isset($_SESSION['usuario'])) {
     exit;
 }
 
-/*ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);*/
-
 include 'conectar_bd.php';
 if (!$db) die("Error de conexión a la base de datos.");
 
@@ -32,13 +28,14 @@ $solicitudes = json_decode($solicitudesJSON,true);
 $formulario = 'SOLICITUD DE PETICION DE MENSURA';
 
 if(!$solicitudes){
-    die("❌ No se recibieron solicitudes de mensura válidas");
+    die("No se recibieron solicitudes de mensura válidas");
 }
 
 $multipoligonosJSON = $_POST['multipoligonos'] ?? '[]';
 $multipoligonos = json_decode($multipoligonosJSON,true);
+
 if(!$multipoligonos){
-    die("❌ No se recibieron pertenencias válidas");
+    die("No se recibieron pertenencias válidas");
 }
 
 
@@ -55,7 +52,7 @@ foreach($solicitudes as $s){
 
     // WKT
     $coords = array_map(fn($v)=>[$v['x'],$v['y']], $s['vertices'] ?? []);
-    if(count($coords) < 3) { echo "❌ Mensura sin vértices suficientes<br>"; continue; }
+    if(count($coords) < 3) continue;
     if($coords[0] !== end($coords)) $coords[] = $coords[0];
     $coords_wkt = array_map(fn($c)=>implode(' ',$c), $coords);
     $wkt = "POLYGON((" . implode(',', $coords_wkt) . "))";
@@ -83,7 +80,6 @@ foreach($solicitudes as $s){
     ];
 
     $res = pg_query_params($db,$q,$p);
-    echo $res ? "✔ Mensura $mensura_id guardada<br>" : "❌ Error mensura: ".pg_last_error($db)."<br>";
 }
 
 
@@ -108,7 +104,6 @@ foreach($multipoligonos as $pert){
     $p = [$pert_id,$id_sol,$id_pert,$wkt,$sup_graf_ha,$sup_decl,$denominacion, $superficie_mensura, $tipo_yacimiento, $exp_siged];
 
     $res = pg_query_params($db,$q,$p);
-    echo $res ? "✔ Pertenencia $pert_id guardada<br>" : "❌ Error pertenencia: ".pg_last_error($db)."<br>";
 }
 
 

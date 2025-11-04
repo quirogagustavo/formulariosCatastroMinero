@@ -651,7 +651,7 @@ function eliminarUltimoPuntoUnico(event) {
         const n = vertices.length;
         for (let i = 0; i < n; i++) {
             const j = (i + 1) % n;
-            area += (vertices[j].x - vertices[i].x) * (vertices[j].y + vertices[i].y);
+            area += vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y;
         }
         return area / 2;
     }

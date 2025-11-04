@@ -257,16 +257,13 @@ if ($busqueda_expte !== '') {
             t.sup_decla_men_ha,
             t.mens_id,
             t.id_pert,
-            CASE 
-                WHEN ST_IsValid(t.geom) AND ST_NumPoints(t.geom) > 0 THEN
-                    (SELECT json_agg(json_build_object('x', ST_X(dp.geom), 'y', ST_Y(dp.geom))) 
-                     FROM ST_DumpPoints(t.geom) dp)
-                ELSE 
-                    '[{\"x\":0,\"y\":0}]'::json
-            END AS vertices
+            array_to_json(ARRAY(
+                SELECT json_build_object('x', ST_X(geom), 'y', ST_Y(geom))
+                FROM ST_DumpPoints(ST_ExteriorRing(t.geom))
+            )) as vertices
         FROM registro_grafico.gra_cm_mensura_pertenencias_pga07 t
         WHERE t.expte_siged ILIKE $1
-        ORDER BY t.id_pert::int ASC
+        ORDER BY t.mens_id ASC, t.id_pert ASC
     ";
 
     $result1 = pg_query_params($conn, $sql1, $params);
