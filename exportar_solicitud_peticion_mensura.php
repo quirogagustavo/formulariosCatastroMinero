@@ -161,19 +161,19 @@ if ($busqueda_expte !== '') {
     $expediente_base = preg_replace('/-(EXP|MANIF|SOLICITUD).*$/i', '', $busqueda_expte);
     $params = array($expediente_base . '%');
 
-   // Perimetros
+   // Perimetros - Calcular superficie directamente desde geometría
     $sql1 = "
         SELECT 
             t.mensar_id,
             t.expte_siged,
-            t.sup_graf_ha,
+            ST_Area(t.geom) / 10000 as sup_graf_ha,
             t.sup_decla_ha,
             t.geom AS geom_original,
             json_agg(json_build_object('x', ST_X((dp).geom), 'y', ST_Y((dp).geom))) AS vertices
         FROM registro_grafico.gra_cm_mensura_area_pga07 t
         JOIN LATERAL ST_DumpPoints(t.geom) AS dp ON true
         WHERE t.expte_siged LIKE $1
-        GROUP BY t.expte_siged, t.sup_graf_ha, t.sup_decla_ha, t.geom, t.mensar_id
+        GROUP BY t.expte_siged, t.sup_decla_ha, t.geom, t.mensar_id
         ORDER BY t.expte_siged, t.mensar_id
     ";
 
@@ -190,12 +190,12 @@ if ($busqueda_expte !== '') {
         ORDER BY t.expte_siged, t.ll_id
     ";
 
-    // Pertenencias - Consulta simplificada
+    // Pertenencias - Calcular superficie directamente desde geometría
     $sql2 = "
         SELECT 
             t.expte_siged,
             t.id_pol,
-            t.sup_reg_ha,
+            ST_Area(t.geom) / 10000 as sup_reg_ha,
             t.sup_decla_men_ha,
             t.mens_id,
             t.id_pert,
