@@ -320,7 +320,9 @@ if ($busqueda_expte !== '') {
                  " | Superficie Registrada: " . $row2['sup_reg_ha'] . "<br><br>";
             $vertices2 = json_decode($row2['vertices'], true);
             foreach ($vertices2 as $v) {
-                echo "&nbsp;&nbsp;&nbsp;Vertice: (" . htmlspecialchars(number_format($v['x'], 2, '.', '')) . ", " . htmlspecialchars(number_format($v['y'], 2, '.', '')) . ")<br>";
+                // $v['x'] = NORTE (ST_Y), $v['y'] = ESTE (ST_X)
+                // Mostrar en orden: (ESTE, NORTE) = (Y, X)
+                echo "&nbsp;&nbsp;&nbsp;Vertice: (" . htmlspecialchars(number_format($v['y'], 2, '.', '')) . ", " . htmlspecialchars(number_format($v['x'], 2, '.', '')) . ")<br>";
             }
             echo "<br>";
         }

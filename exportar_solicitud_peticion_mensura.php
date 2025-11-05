@@ -341,8 +341,10 @@ if ($busqueda_expte !== '') {
             foreach ($vertices as $i => $v) {
                 echo "<tr>";
                 echo "<td>V". ($i + 1) . "</td>";
-                echo "<td>" . htmlspecialchars(number_format($v['x'], 2, ',', '')) . "</td>";
-                echo "<td>" . htmlspecialchars(number_format($v['y'], 2, ',', '')) . "</td>";
+                // $v['x'] = NORTE (ST_Y), $v['y'] = ESTE (ST_X)
+                // Mostrar en orden: ESTE, NORTE
+                echo "<td>" . htmlspecialchars(number_format($v['y'], 2, ',', '')) . "</td>"; // ESTE
+                echo "<td>" . htmlspecialchars(number_format($v['x'], 2, ',', '')) . "</td>"; // NORTE
                 echo "</tr>";
             }
             echo "</table>";
