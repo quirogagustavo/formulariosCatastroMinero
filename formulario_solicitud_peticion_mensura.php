@@ -1070,10 +1070,17 @@ function actualizarLista(){
   lista.innerHTML="";
 
   solicitudesMensura.forEach((pol,idx)=>{
+    // Para visualización: convertir a WGS84
     const coords = pol.vertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lon,lat]; });
     if(coords.length>2) coords.push(coords[0]);
 
-    pol.sup_graf_ha = turf.area({type:"Polygon", coordinates:[coords]}) / 10000;
+    // IMPORTANTE: Calcular área con coordenadas proyectadas (metros), NO geográficas (grados)
+    // Crear polígono con coordenadas en metros (x, y)
+    const coordsProyectadas = pol.vertices.map(p => [p.y, p.x]); // [ESTE, NORTE] para Turf
+    coordsProyectadas.push(coordsProyectadas[0]); // cerrar polígono
+    
+    // Calcular área en metros cuadrados y convertir a hectáreas
+    pol.sup_graf_ha = turf.area({type:"Polygon", coordinates:[coordsProyectadas]}) / 10000;
     const areaHa = (isFinite(pol.sup_graf_ha) ? pol.sup_graf_ha : 0).toFixed(2);
 
     const li = document.createElement("li");
@@ -1093,13 +1100,20 @@ function actualizarLista(){
   });
 
   multipoligonos.forEach((pol,idx)=>{
+    // Para visualización: convertir a WGS84
     const coords = pol.vertices.map(p=>{ 
       const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); 
       return [lon,lat]; 
     });
     if(coords.length>2) coords.push(coords[0]);
 
-    pol.sup_graf_ha = turf.area({type:"Polygon", coordinates:[coords]}) / 10000;
+    // IMPORTANTE: Calcular área con coordenadas proyectadas (metros), NO geográficas (grados)
+    // Crear polígono con coordenadas en metros (x, y)
+    const coordsProyectadas = pol.vertices.map(p => [p.y, p.x]); // [ESTE, NORTE] para Turf
+    coordsProyectadas.push(coordsProyectadas[0]); // cerrar polígono
+    
+    // Calcular área en metros cuadrados y convertir a hectáreas
+    pol.sup_graf_ha = turf.area({type:"Polygon", coordinates:[coordsProyectadas]}) / 10000;
     const areaHa = (isFinite(pol.sup_graf_ha) ? pol.sup_graf_ha : 0).toFixed(2);
     
     const li = document.createElement("li");
@@ -1194,6 +1208,11 @@ function prepararEnvio(){
       }
   });
 
+  // VALIDACIÓN: Superficie de pertenencias no puede exceder el perímetro
+  if (!validarSuperficies()) {
+    return false;
+  }
+
   // Validar secuencia horaria de polígonos
   if (!validarSecuenciaPoligonos()) {
     return false;
@@ -1205,6 +1224,60 @@ function prepararEnvio(){
 
   document.getElementById("solicitudes_mensura").value = JSON.stringify(solicitudesMensura);
   document.getElementById("multipoligonos").value = JSON.stringify(multipoligonos);
+  return true;
+}
+
+// Validar que la suma de superficies de pertenencias no exceda el perímetro
+function validarSuperficies() {
+  // Si no hay perímetro o no hay pertenencias, no validar
+  if (solicitudesMensura.length === 0 || multipoligonos.length === 0) {
+    return true;
+  }
+  
+  // Obtener superficie del perímetro (calculada)
+  const superficiePerimetro = solicitudesMensura[0].sup_graf_ha || 0;
+  
+  // Calcular suma de superficies de pertenencias (calculadas)
+  let sumaSuperificiesPertenencias = 0;
+  multipoligonos.forEach(pert => {
+    sumaSuperificiesPertenencias += (pert.sup_graf_ha || 0);
+  });
+  
+  // Validar con tolerancia del 1% (errores de redondeo/cálculo)
+  const tolerancia = superficiePerimetro * 0.01;
+  
+  if (sumaSuperificiesPertenencias > (superficiePerimetro + tolerancia)) {
+    const mensaje = `❌ ERROR DE VALIDACIÓN DE SUPERFICIES\n\n` +
+                   `La suma de las superficies de las PERTENENCIAS (${sumaSuperificiesPertenencias.toFixed(4)} ha) ` +
+                   `EXCEDE la superficie del PERÍMETRO DE MENSURA (${superficiePerimetro.toFixed(4)} ha).\n\n` +
+                   `Diferencia: ${(sumaSuperificiesPertenencias - superficiePerimetro).toFixed(4)} ha\n\n` +
+                   `Esto es técnicamente imposible ya que las pertenencias deben estar contenidas ` +
+                   `dentro del perímetro de mensura.\n\n` +
+                   `Posibles causas:\n` +
+                   `1. Error en las coordenadas del perímetro\n` +
+                   `2. Error en las coordenadas de alguna pertenencia\n` +
+                   `3. Pertenencias solapadas (duplicación de área)\n\n` +
+                   `Por favor revise las coordenadas antes de continuar.`;
+    
+    alert(mensaje);
+    return false;
+  }
+  
+  // Advertencia si la suma está muy por debajo (más del 50% vacío)
+  const porcentajeUtilizado = (sumaSuperificiesPertenencias / superficiePerimetro) * 100;
+  if (porcentajeUtilizado < 50 && multipoligonos.length > 0) {
+    const continuar = confirm(
+      `⚠️ ADVERTENCIA DE SUPERFICIE\n\n` +
+      `Superficie perímetro: ${superficiePerimetro.toFixed(2)} ha\n` +
+      `Suma pertenencias: ${sumaSuperificiesPertenencias.toFixed(2)} ha\n` +
+      `Porcentaje utilizado: ${porcentajeUtilizado.toFixed(1)}%\n\n` +
+      `Hay un ${(100 - porcentajeUtilizado).toFixed(1)}% del área sin asignar a pertenencias.\n\n` +
+      `¿Es esto correcto? ¿Desea continuar?`
+    );
+    return continuar;
+  }
+  
+  console.log(`✅ Validación de superficies OK: ${sumaSuperificiesPertenencias.toFixed(2)} ha / ${superficiePerimetro.toFixed(2)} ha (${porcentajeUtilizado.toFixed(1)}%)`);
   return true;
 }
 
