@@ -294,79 +294,174 @@ if (!isset($_SESSION['usuario'])) {
       <li><strong>Importante:</strong> Esta normativa aplica tanto para el perímetro de mensura como para las pertenencias</li>
     </ul>
   </div>
-  
-  <br>
-   <!-- CSV Solicitud Mensura -->
-   <h6>Ingreso de coordenadas de los vértices del perímetro de la solicitud de mensura (archivo csv)</h6>   
-   <div class="col-6 mt-3">
+
+  <!-- ============================================ -->
+  <!-- SECCIÓN 1: PERÍMETRO DE MENSURA (UN SOLO POLÍGONO) -->
+  <!-- ============================================ -->
+  <div class="card mt-4 border-success">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> PERÍMETRO DE MENSURA</h5>
+      <small>Ingrese el polígono que delimita el área total de mensura (UN SOLO POLÍGONO)</small>
+    </div>
+    <div class="card-body">
+      
+      <!-- Opción 1: Importar desde CSV -->
+      <h6 class="text-success"><i class="bi bi-file-earmark-arrow-up"></i> Opción A: Importar desde archivo CSV</h6>
+      <div class="col-md-8 mb-3">
         <div class="input-group">
-          
           <input type="file" id="csvSolicitudMensura" accept=".csv" class="form-control">
-          <button type="button" class="btn btn-outline-success" onclick="importarSolicitudMensura()">Importar Perímetro</button>
+          <button type="button" class="btn btn-success" onclick="importarSolicitudMensura()">
+            <i class="bi bi-upload"></i> Importar Perímetro
+          </button>
         </div>
-        <small class="form-text text-muted">El archivo csv no debe tener encabezados y la siguiente estructura: identificador de polígono; identificador de vértice; coordenada este; coordenada norte por ejemplo: <br>1;1;2457558,74;6557062,97<br>1;4;2459358,71;6557062,98<br>1;8;2459358,71;6556662,98</small>
+        <small class="form-text text-muted">
+          Formato: <code>id_mensura;id_vertice;este;norte</code><br>
+          Ejemplo: <code>1;1;2457558,74;6557062,97</code>
+        </small>
       </div>
 
-  <!-- CSV Pertenencias -->
-  <br>
-  <h6>Ingreso de coordenadas de los vértices de pertenencias (archivo csv)</h6>    
-  <div class="col-6 mt-3">
-        <div class="input-group">
-          
-          <input type="file" id="csvFile" accept=".csv" class="form-control">
-          <button type="button" class="btn btn-outline-primary" onclick="importarDesdeCSV()">Importar Pertenencias</button>
-        </div>
-        <small class="form-text text-muted">El archivo csv no debe tener encabezados y la siguiente estructura: identificador de polígono; identificador de pertenencia; identificador de vértice; coordenada este; coordenada norte) por ejemplo: <br>1;1;1;2457558,74;6557062,97<br>1;1;2;2458158,71;6557062,97<br>1;1;6;2458158,71;6556662,97</small>
+      <div class="text-center my-3">
+        <strong>-- O --</strong>
       </div>
 
-      <!-- Ingreso manual de coordenadas (opcional) -->
-      <div class="row g-3 align-items-end mt-3">
-        <div class="col-md-4">
-          <label class="form-label">ESTE</label>
-          <input type="number" id="x_manual" class="form-control" step="0.01" min="0" placeholder="0.00">
+      <!-- Opción 2: Ingreso manual -->
+      <h6 class="text-success"><i class="bi bi-pencil-square"></i> Opción B: Ingreso manual de vértices</h6>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-bold">ESTE</label>
+          <input type="number" id="x_perimetro" class="form-control" step="0.01" min="0" placeholder="0.00">
         </div>
-        <div class="col-md-4">
-          <label class="form-label">NORTE</label>
-          <input type="number" id="y_manual" class="form-control" step="0.01" min="0" placeholder="0.00">
+        <div class="col-md-3">
+          <label class="form-label fw-bold">NORTE</label>
+          <input type="number" id="y_perimetro" class="form-control" step="0.01" min="0" placeholder="0.00">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <div class="d-flex gap-2">
-            <button type="button" onclick="agregarPuntoManual()" class="btn btn-orange flex-fill">Agregar Punto</button>
-            <button type="button" onclick="eliminarUltimoPuntoManual()" class="btn btn-danger flex-fill">Eliminar Último</button>
+            <button type="button" onclick="agregarPuntoPerimetro()" class="btn btn-success flex-fill">
+              <i class="bi bi-plus-circle"></i> Agregar Punto
+            </button>
+            <button type="button" onclick="eliminarUltimoPuntoPerimetro()" class="btn btn-danger flex-fill">
+              <i class="bi bi-trash"></i> Eliminar Último
+            </button>
           </div>
           <div class="d-flex gap-2 mt-2">
-            <button type="button" onclick="finalizarPoligonoManual()" class="btn btn-primary btn-sm flex-fill">
-              <i class="bi bi-check-circle"></i> Finalizar como Perímetro
+            <button type="button" onclick="finalizarPerimetroManual()" class="btn btn-primary flex-fill">
+              <i class="bi bi-check-circle-fill"></i> FINALIZAR PERÍMETRO
             </button>
-            <button type="button" onclick="finalizarPertenenciaManual()" class="btn btn-success btn-sm flex-fill">
-              <i class="bi bi-plus-circle"></i> Finalizar como Pertenencia
+            <button type="button" onclick="limpiarPerimetro()" class="btn btn-secondary flex-fill">
+              <i class="bi bi-x-circle"></i> Limpiar
             </button>
-            <button type="button" onclick="limpiarPoligonoManual()" class="btn btn-secondary btn-sm flex-fill">Limpiar</button>
           </div>
         </div>
       </div>
 
-      <!-- Tabla de puntos ingresados manualmente -->
-      <div class="row mt-3" id="tabla-puntos-container" style="display: none;">
+      <!-- Tabla de puntos del perímetro -->
+      <div class="row mt-3" id="tabla-perimetro-container" style="display: none;">
         <div class="col-12">
-          <h6>Puntos ingresados:</h6>
+          <h6 class="text-success">Vértices del Perímetro:</h6>
           <div class="table-responsive">
             <table class="table table-sm table-striped table-bordered">
-              <thead class="table-dark">
+              <thead class="table-success">
                 <tr>
-                  <th style="width: 10%;">Vértice</th>
+                  <th style="width: 15%;">Vértice</th>
                   <th style="width: 35%;">ESTE</th>
                   <th style="width: 35%;">NORTE</th>
-                  <th style="width: 20%;">Acciones</th>
+                  <th style="width: 15%;">Acciones</th>
                 </tr>
               </thead>
-              <tbody id="tabla-puntos-body">
+              <tbody id="tabla-perimetro-body">
                 <!-- Se llenará dinámicamente -->
               </tbody>
             </table>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECCIÓN 2: PERTENENCIAS (VARIOS POLÍGONOS) -->
+  <!-- ============================================ -->
+  <div class="card mt-4 border-primary">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="bi bi-square-fill"></i> PERTENENCIAS</h5>
+      <small>Ingrese los polígonos de las pertenencias dentro del área de mensura (PUEDEN SER VARIOS POLÍGONOS)</small>
+    </div>
+    <div class="card-body">
+      
+      <!-- Opción 1: Importar desde CSV -->
+      <h6 class="text-primary"><i class="bi bi-file-earmark-arrow-up"></i> Opción A: Importar desde archivo CSV</h6>
+      <div class="col-md-8 mb-3">
+        <div class="input-group">
+          <input type="file" id="csvFile" accept=".csv" class="form-control">
+          <button type="button" class="btn btn-primary" onclick="importarDesdeCSV()">
+            <i class="bi bi-upload"></i> Importar Pertenencias
+          </button>
+        </div>
+        <small class="form-text text-muted">
+          Formato: <code>id_solicitud;id_pertenencia;id_vertice;este;norte</code><br>
+          Ejemplo: <code>1;P1;1;2457558,74;6557062,97</code>
+        </small>
+      </div>
+
+      <div class="text-center my-3">
+        <strong>-- O --</strong>
+      </div>
+
+      <!-- Opción 2: Ingreso manual -->
+      <h6 class="text-primary"><i class="bi bi-pencil-square"></i> Opción B: Ingreso manual de vértices</h6>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-bold">ESTE</label>
+          <input type="number" id="x_pertenencia" class="form-control" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">NORTE</label>
+          <input type="number" id="y_pertenencia" class="form-control" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex gap-2">
+            <button type="button" onclick="agregarPuntoPertenencia()" class="btn btn-primary flex-fill">
+              <i class="bi bi-plus-circle"></i> Agregar Punto
+            </button>
+            <button type="button" onclick="eliminarUltimoPuntoPertenencia()" class="btn btn-danger flex-fill">
+              <i class="bi bi-trash"></i> Eliminar Último
+            </button>
+          </div>
+          <div class="d-flex gap-2 mt-2">
+            <button type="button" onclick="finalizarPertenenciaManual()" class="btn btn-success flex-fill">
+              <i class="bi bi-check-circle-fill"></i> FINALIZAR PERTENENCIA
+            </button>
+            <button type="button" onclick="limpiarPertenencia()" class="btn btn-secondary flex-fill">
+              <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de puntos de la pertenencia actual -->
+      <div class="row mt-3" id="tabla-pertenencia-container" style="display: none;">
+        <div class="col-12">
+          <h6 class="text-primary">Vértices de la Pertenencia Actual:</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered">
+              <thead class="table-primary">
+                <tr>
+                  <th style="width: 15%;">Vértice</th>
+                  <th style="width: 35%;">ESTE</th>
+                  <th style="width: 35%;">NORTE</th>
+                  <th style="width: 15%;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-pertenencia-body">
+                <!-- Se llenará dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
       <div class="col-12 mt-3">
         <div class="d-flex gap-2">
@@ -447,9 +542,12 @@ if (!isset($_SESSION['usuario'])) {
   let solicitudesMensura = [];
   let layersPoligonos = [];
   let layersSolicitudes = [];
-  // Para ingreso manual temporal
-  let manualVertices = [];
-  let manualLayers = [];
+  // Para ingreso manual temporal - PERÍMETRO
+  let perimetroVertices = [];
+  let perimetroLayers = [];
+  // Para ingreso manual temporal - PERTENENCIAS
+  let pertenenciaVertices = [];
+  let pertenenciaLayers = [];
 
 proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
     const crs22182 = new L.Proj.CRS('EPSG:22182',
@@ -551,48 +649,57 @@ function dibujarSolicitudes(){
   actualizarLista();
 }
 
-// --- Funciones para ingreso manual de coordenadas/polígonos ---
-function agregarPuntoManual(){
-  const ix = document.getElementById('x_manual');
-  const iy = document.getElementById('y_manual');
+// ============================================
+// FUNCIONES PARA PERÍMETRO DE MENSURA
+// ============================================
+function agregarPuntoPerimetro(){
+  const ix = document.getElementById('x_perimetro');
+  const iy = document.getElementById('y_perimetro');
   const x = parseFloat(ix.value);
   const y = parseFloat(iy.value);
   if (isNaN(x) || isNaN(y) || x <= 0 || y <= 0){
     alert('Por favor ingresa valores válidos para ESTE y NORTE');
     return;
   }
-  manualVertices.push({ id_v: manualVertices.length + 1, x, y });
-  actualizarTablaPuntosManual();
-  dibujarTemporalManual();
+  
+  // Validar que solo haya UN perímetro
+  if (solicitudesMensura.length > 0){
+    alert('Ya existe un perímetro de mensura. Si desea modificarlo, primero elimínelo de la lista.');
+    return;
+  }
+  
+  perimetroVertices.push({ id_v: perimetroVertices.length + 1, x, y });
+  actualizarTablaPerimetro();
+  dibujarTemporalPerimetro();
   ix.value = '';
   iy.value = '';
 }
 
-function eliminarUltimoPuntoManual(){
-  if (manualVertices.length === 0){
-    alert('No hay puntos manuales para eliminar');
+function eliminarUltimoPuntoPerimetro(){
+  if (perimetroVertices.length === 0){
+    alert('No hay puntos del perímetro para eliminar');
     return;
   }
-  manualVertices.pop();
-  actualizarTablaPuntosManual();
-  dibujarTemporalManual();
+  perimetroVertices.pop();
+  actualizarTablaPerimetro();
+  dibujarTemporalPerimetro();
 }
 
-function eliminarPuntoManualPorIndice(indice){
+function eliminarPuntoPerimetroPorIndice(indice){
   if (confirm(`¿Está seguro de eliminar el vértice ${indice + 1}?`)){
-    manualVertices.splice(indice, 1);
+    perimetroVertices.splice(indice, 1);
     // Renumerar vértices
-    manualVertices.forEach((v, i) => v.id_v = i + 1);
-    actualizarTablaPuntosManual();
-    dibujarTemporalManual();
+    perimetroVertices.forEach((v, i) => v.id_v = i + 1);
+    actualizarTablaPerimetro();
+    dibujarTemporalPerimetro();
   }
 }
 
-function actualizarTablaPuntosManual(){
-  const container = document.getElementById('tabla-puntos-container');
-  const tbody = document.getElementById('tabla-puntos-body');
+function actualizarTablaPerimetro(){
+  const container = document.getElementById('tabla-perimetro-container');
+  const tbody = document.getElementById('tabla-perimetro-body');
   
-  if (manualVertices.length === 0){
+  if (perimetroVertices.length === 0){
     container.style.display = 'none';
     tbody.innerHTML = '';
     return;
@@ -601,15 +708,15 @@ function actualizarTablaPuntosManual(){
   container.style.display = 'block';
   tbody.innerHTML = '';
   
-  manualVertices.forEach((punto, index) => {
+  perimetroVertices.forEach((punto, index) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="text-center"><strong>V${punto.id_v}</strong></td>
       <td>${punto.x.toFixed(2)}</td>
       <td>${punto.y.toFixed(2)}</td>
       <td class="text-center">
-        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoManualPorIndice(${index})" title="Eliminar punto">
-          🗑️
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPerimetroPorIndice(${index})" title="Eliminar punto">
+          <i class="bi bi-trash"></i>
         </button>
       </td>
     `;
@@ -617,54 +724,155 @@ function actualizarTablaPuntosManual(){
   });
 }
 
-function limpiarPoligonoManual(){
-  manualVertices = [];
-  manualLayers.forEach(l=>map.removeLayer(l));
-  manualLayers = [];
-  actualizarTablaPuntosManual();
+function limpiarPerimetro(){
+  perimetroVertices = [];
+  perimetroLayers.forEach(l=>map.removeLayer(l));
+  perimetroLayers = [];
+  actualizarTablaPerimetro();
 }
 
-function dibujarTemporalManual(){
+function dibujarTemporalPerimetro(){
   // eliminar capas previas
-  manualLayers.forEach(l=>map.removeLayer(l));
-  manualLayers = [];
-  if (manualVertices.length === 0) return;
+  perimetroLayers.forEach(l=>map.removeLayer(l));
+  perimetroLayers = [];
+  if (perimetroVertices.length === 0) return;
 
-  const coords = manualVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lat,lon]; });
+  const coords = perimetroVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lat,lon]; });
 
-  manualVertices.forEach(p=>{
+  perimetroVertices.forEach(p=>{
     const [lon,lat] = proj4(fromProjection,toProjection,[p.x,p.y]);
     const m = L.marker([lat,lon],{
       icon: L.divIcon({ className: 'vertice-label', html: p.id_v })
     }).addTo(map);
-    manualLayers.push(m);
+    perimetroLayers.push(m);
   });
 
-  if (manualVertices.length > 2){
+  if (perimetroVertices.length > 2){
     const layer = L.polygon(coords, { color:'green', weight:4, fill:false }).addTo(map);
-    manualLayers.push(layer);
+    perimetroLayers.push(layer);
   }
 }
 
-function finalizarPoligonoManual(){
-  if (manualVertices.length < 3){
+function finalizarPerimetroManual(){
+  if (perimetroVertices.length < 3){
     alert('Un polígono necesita al menos 3 vértices');
     return;
   }
+  
+  // Validar que no exista ya un perímetro
+  if (solicitudesMensura.length > 0){
+    alert('Ya existe un perímetro de mensura. Si desea reemplazarlo, primero elimínelo de la lista.');
+    return;
+  }
+  
   // generar id único
-  let maxId = 0;
-  solicitudesMensura.forEach(p=>{ if (p.id_mensura && Number(p.id_mensura) > maxId) maxId = Number(p.id_mensura); });
-  const newId = maxId + 1;
-  const pol = { id_mensura: newId, vertices: manualVertices.slice(), sup_decl: 0, sup_graf_ha: 0 };
+  const pol = { id_mensura: 1, vertices: perimetroVertices.slice(), sup_decl: 0, sup_graf_ha: 0 };
   solicitudesMensura.push(pol);
   document.getElementById('solicitudes_mensura').value = JSON.stringify(solicitudesMensura);
-  limpiarPoligonoManual();
+  limpiarPerimetro();
   dibujarSolicitudes();
+  alert('✅ Perímetro de mensura finalizado correctamente');
 }
 
-// Nueva función para finalizar pertenencia manualmente
+// ============================================
+// FUNCIONES PARA PERTENENCIAS
+// ============================================
+function agregarPuntoPertenencia(){
+  const ix = document.getElementById('x_pertenencia');
+  const iy = document.getElementById('y_pertenencia');
+  const x = parseFloat(ix.value);
+  const y = parseFloat(iy.value);
+  if (isNaN(x) || isNaN(y) || x <= 0 || y <= 0){
+    alert('Por favor ingresa valores válidos para ESTE y NORTE');
+    return;
+  }
+  pertenenciaVertices.push({ id_v: pertenenciaVertices.length + 1, x, y });
+  actualizarTablaPertenencia();
+  dibujarTemporalPertenencia();
+  ix.value = '';
+  iy.value = '';
+}
+
+function eliminarUltimoPuntoPertenencia(){
+  if (pertenenciaVertices.length === 0){
+    alert('No hay puntos de la pertenencia para eliminar');
+    return;
+  }
+  pertenenciaVertices.pop();
+  actualizarTablaPertenencia();
+  dibujarTemporalPertenencia();
+}
+
+function eliminarPuntoPertenenciaPorIndice(indice){
+  if (confirm(`¿Está seguro de eliminar el vértice ${indice + 1}?`)){
+    pertenenciaVertices.splice(indice, 1);
+    // Renumerar vértices
+    pertenenciaVertices.forEach((v, i) => v.id_v = i + 1);
+    actualizarTablaPertenencia();
+    dibujarTemporalPertenencia();
+  }
+}
+
+function actualizarTablaPertenencia(){
+  const container = document.getElementById('tabla-pertenencia-container');
+  const tbody = document.getElementById('tabla-pertenencia-body');
+  
+  if (pertenenciaVertices.length === 0){
+    container.style.display = 'none';
+    tbody.innerHTML = '';
+    return;
+  }
+  
+  container.style.display = 'block';
+  tbody.innerHTML = '';
+  
+  pertenenciaVertices.forEach((punto, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="text-center"><strong>V${punto.id_v}</strong></td>
+      <td>${punto.x.toFixed(2)}</td>
+      <td>${punto.y.toFixed(2)}</td>
+      <td class="text-center">
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPertenenciaPorIndice(${index})" title="Eliminar punto">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function limpiarPertenencia(){
+  pertenenciaVertices = [];
+  pertenenciaLayers.forEach(l=>map.removeLayer(l));
+  pertenenciaLayers = [];
+  actualizarTablaPertenencia();
+}
+
+function dibujarTemporalPertenencia(){
+  // eliminar capas previas
+  pertenenciaLayers.forEach(l=>map.removeLayer(l));
+  pertenenciaLayers = [];
+  if (pertenenciaVertices.length === 0) return;
+
+  const coords = pertenenciaVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lat,lon]; });
+
+  pertenenciaVertices.forEach(p=>{
+    const [lon,lat] = proj4(fromProjection,toProjection,[p.x,p.y]);
+    const m = L.marker([lat,lon],{
+      icon: L.divIcon({ className: 'vertice-label', html: p.id_v })
+    }).addTo(map);
+    pertenenciaLayers.push(m);
+  });
+
+  if (pertenenciaVertices.length > 2){
+    const layer = L.polygon(coords, { color:'blue', weight:4, fill:false, dashArray: '4,6' }).addTo(map);
+    pertenenciaLayers.push(layer);
+  }
+}
+
 function finalizarPertenenciaManual(){
-  if (manualVertices.length < 3){
+  if (pertenenciaVertices.length < 3){
     alert('Una pertenencia necesita al menos 3 vértices');
     return;
   }
@@ -673,14 +881,14 @@ function finalizarPertenenciaManual(){
   const id_sol = prompt('Ingrese ID de Solicitud (número):', '1');
   if (!id_sol) return;
   
-  const id_pert = prompt('Ingrese ID de Pertenencia (ej: P1, P2, etc.):', 'P1');
+  const id_pert = prompt('Ingrese ID de Pertenencia (ej: P1, P2, etc.):', 'P' + (multipoligonos.length + 1));
   if (!id_pert) return;
   
   // Crear objeto de pertenencia
   const pertenencia = {
     id_sol: id_sol,
     id_p: id_pert,
-    vertices: manualVertices.slice(),
+    vertices: pertenenciaVertices.slice(),
     sup_decl: 0,
     sup_graf_ha: 0
   };
@@ -688,11 +896,11 @@ function finalizarPertenenciaManual(){
   multipoligonos.push(pertenencia);
   document.getElementById('multipoligonos').value = JSON.stringify(multipoligonos);
   
-  limpiarPoligonoManual();
+  limpiarPertenencia();
   dibujarMultipoligonos();
   actualizarLista();
   
-  alert('Pertenencia ' + id_pert + ' agregada correctamente');
+  alert('✅ Pertenencia ' + id_pert + ' agregada correctamente');
 }
 
 function ajustarVista(){
