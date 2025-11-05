@@ -53,8 +53,9 @@ function next_id($db, $tabla, $campo){
 foreach($solicitudes as $s){
     $mensura_id = next_id($db,'registro_grafico.gra_cm_mensura_area_pga07','mensar_id');
 
-    // WKT
-    $coords = array_map(fn($v)=>[$v['x'],$v['y']], $s['vertices'] ?? []);
+    // WKT - IMPORTANTE: PostGIS usa orden (ESTE NORTE) = (Y X)
+    // Nuestras coordenadas son X=NORTE, Y=ESTE, entonces invertimos a Y X
+    $coords = array_map(fn($v)=>[$v['y'],$v['x']], $s['vertices'] ?? []);
     if(count($coords) < 3) continue;
     if($coords[0] !== end($coords)) $coords[] = $coords[0];
     $coords_wkt = array_map(fn($c)=>implode(' ',$c), $coords);
@@ -102,7 +103,9 @@ foreach($multipoligonos as $pert){
     
     $sup_decl    = isset($pert['sup_decl'])    ? floatval($pert['sup_decl'])    : 0;
 
-    $coords = array_map(fn($v)=>[$v['x'],$v['y']], $pert['vertices']);
+    // WKT - IMPORTANTE: PostGIS usa orden (ESTE NORTE) = (Y X)
+    // Nuestras coordenadas son X=NORTE, Y=ESTE, entonces invertimos a Y X
+    $coords = array_map(fn($v)=>[$v['y'],$v['x']], $pert['vertices']);
     if($coords[0] !== end($coords)) $coords[] = $coords[0]; // cerrar polígono
     $coords_wkt = array_map(fn($c)=>implode(' ',$c), $coords);
     $wkt = "POLYGON((" . implode(',', $coords_wkt) . "))";

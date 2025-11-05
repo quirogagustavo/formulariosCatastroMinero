@@ -908,11 +908,130 @@ function dibujarTemporalPertenencia(){
   }
 }
 
+// ============================================
+// FUNCIONES DE VALIDACIÓN GEOMÉTRICA
+// ============================================
+
+/**
+ * Verifica si un punto está dentro de un polígono usando el algoritmo Ray Casting
+ * @param {Object} punto - {x, y}
+ * @param {Array} poligono - Array de {x, y}
+ * @return {boolean} true si el punto está dentro o en el borde del polígono
+ */
+function puntoEnPoligono(punto, poligono) {
+  let x = punto.x, y = punto.y;
+  let dentro = false;
+  
+  for (let i = 0, j = poligono.length - 1; i < poligono.length; j = i++) {
+    let xi = poligono[i].x, yi = poligono[i].y;
+    let xj = poligono[j].x, yj = poligono[j].y;
+    
+    // Verificar si el punto está en el borde del polígono (tolerancia de 0.01 metros)
+    if (puntoEnSegmento(punto, poligono[i], poligono[j], 0.01)) {
+      return true;
+    }
+    
+    let intersecta = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersecta) dentro = !dentro;
+  }
+  
+  return dentro;
+}
+
+/**
+ * Verifica si un punto está en un segmento de línea
+ */
+function puntoEnSegmento(punto, p1, p2, tolerancia) {
+  let d1 = distancia(punto, p1);
+  let d2 = distancia(punto, p2);
+  let lineaLen = distancia(p1, p2);
+  
+  return Math.abs(d1 + d2 - lineaLen) < tolerancia;
+}
+
+/**
+ * Calcula la distancia euclidiana entre dos puntos
+ */
+function distancia(p1, p2) {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+}
+
+/**
+ * Verifica si todos los vértices de un polígono están dentro de otro polígono
+ * @param {Array} poligonoInterior - Array de {x, y}
+ * @param {Array} poligonoExterior - Array de {x, y}
+ * @return {Object} {valido: boolean, mensaje: string}
+ */
+function poligonoEnPoligono(poligonoInterior, poligonoExterior) {
+  // Caso especial: si los polígonos son idénticos (mensura con una sola pertenencia)
+  if (poligonosIguales(poligonoInterior, poligonoExterior)) {
+    return {
+      valido: true,
+      mensaje: 'Perímetro y pertenencia coinciden (mensura de una sola pertenencia)'
+    };
+  }
+  
+  // Verificar que todos los vértices del polígono interior estén dentro del exterior
+  for (let i = 0; i < poligonoInterior.length; i++) {
+    if (!puntoEnPoligono(poligonoInterior[i], poligonoExterior)) {
+      return {
+        valido: false,
+        mensaje: `El vértice ${i + 1} de la pertenencia (X: ${poligonoInterior[i].x.toFixed(2)}, Y: ${poligonoInterior[i].y.toFixed(2)}) está FUERA del perímetro de mensura`
+      };
+    }
+  }
+  
+  return {
+    valido: true,
+    mensaje: 'Todos los vértices de la pertenencia están dentro del perímetro'
+  };
+}
+
+/**
+ * Verifica si dos polígonos son idénticos (mismos vértices, puede variar el orden)
+ */
+function poligonosIguales(poli1, poli2) {
+  if (poli1.length !== poli2.length) return false;
+  
+  const tolerancia = 0.01; // 1 cm de tolerancia
+  
+  // Verificar si cada punto de poli1 existe en poli2
+  for (let p1 of poli1) {
+    let encontrado = false;
+    for (let p2 of poli2) {
+      if (Math.abs(p1.x - p2.x) < tolerancia && Math.abs(p1.y - p2.y) < tolerancia) {
+        encontrado = true;
+        break;
+      }
+    }
+    if (!encontrado) return false;
+  }
+  
+  return true;
+}
+
 function finalizarPertenenciaManual(){
   if (pertenenciaVertices.length < 3){
     alert('Una pertenencia necesita al menos 3 vértices');
     return;
   }
+  
+  // VALIDACIÓN: Verificar que existe un perímetro de mensura
+  if (solicitudesMensura.length === 0) {
+    alert('⚠️ ERROR: Debe ingresar primero el PERÍMETRO DE MENSURA antes de agregar pertenencias.');
+    return;
+  }
+  
+  // VALIDACIÓN: Verificar que la pertenencia está dentro del perímetro
+  const perimetro = solicitudesMensura[0].vertices;
+  const validacion = poligonoEnPoligono(pertenenciaVertices, perimetro);
+  
+  if (!validacion.valido) {
+    alert('❌ VALIDACIÓN FALLIDA\n\n' + validacion.mensaje + '\n\nLas pertenencias deben estar completamente dentro del perímetro de mensura.');
+    return;
+  }
+  
+  console.log('✅ Validación geométrica:', validacion.mensaje);
   
   // Solicitar ID de solicitud y ID de pertenencia
   const id_sol = prompt('Ingrese ID de Solicitud (número):', '1');
