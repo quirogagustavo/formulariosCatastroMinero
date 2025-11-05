@@ -335,7 +335,12 @@ if (!isset($_SESSION['usuario'])) {
             <button type="button" onclick="eliminarUltimoPuntoManual()" class="btn btn-danger flex-fill">Eliminar Último</button>
           </div>
           <div class="d-flex gap-2 mt-2">
-            <button type="button" onclick="finalizarPoligonoManual()" class="btn btn-primary btn-sm flex-fill">Finalizar Polígono</button>
+            <button type="button" onclick="finalizarPoligonoManual()" class="btn btn-primary btn-sm flex-fill">
+              <i class="bi bi-check-circle"></i> Finalizar como Perímetro
+            </button>
+            <button type="button" onclick="finalizarPertenenciaManual()" class="btn btn-success btn-sm flex-fill">
+              <i class="bi bi-plus-circle"></i> Finalizar como Pertenencia
+            </button>
             <button type="button" onclick="limpiarPoligonoManual()" class="btn btn-secondary btn-sm flex-fill">Limpiar</button>
           </div>
         </div>
@@ -657,6 +662,38 @@ function finalizarPoligonoManual(){
   dibujarSolicitudes();
 }
 
+// Nueva función para finalizar pertenencia manualmente
+function finalizarPertenenciaManual(){
+  if (manualVertices.length < 3){
+    alert('Una pertenencia necesita al menos 3 vértices');
+    return;
+  }
+  
+  // Solicitar ID de solicitud y ID de pertenencia
+  const id_sol = prompt('Ingrese ID de Solicitud (número):', '1');
+  if (!id_sol) return;
+  
+  const id_pert = prompt('Ingrese ID de Pertenencia (ej: P1, P2, etc.):', 'P1');
+  if (!id_pert) return;
+  
+  // Crear objeto de pertenencia
+  const pertenencia = {
+    id_sol: id_sol,
+    id_p: id_pert,
+    vertices: manualVertices.slice(),
+    sup_decl: 0,
+    sup_graf_ha: 0
+  };
+  
+  multipoligonos.push(pertenencia);
+  document.getElementById('multipoligonos').value = JSON.stringify(multipoligonos);
+  
+  limpiarPoligonoManual();
+  dibujarMultipoligonos();
+  actualizarLista();
+  
+  alert('Pertenencia ' + id_pert + ' agregada correctamente');
+}
 
 function ajustarVista(){
   const allLayers = [...layersPoligonos,...layersSolicitudes];
