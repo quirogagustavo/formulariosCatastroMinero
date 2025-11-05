@@ -249,6 +249,9 @@ if ($busqueda_expte !== '') {
         ORDER BY t.expte_siged, t.mens_id
     ";*/
 
+    // Pertenencias - IMPORTANTE: En PostGIS guardamos como (Y,X) = (ESTE,NORTE)
+    // ST_Y nos da NORTE (X original) y ST_X nos da ESTE (Y original)
+    // Por eso invertimos el orden en la consulta
     $sql2 = "
          SELECT 
             t.expte_siged,
@@ -258,7 +261,7 @@ if ($busqueda_expte !== '') {
             t.mens_id,
             t.id_pert,
             array_to_json(ARRAY(
-                SELECT json_build_object('x', ST_X(geom), 'y', ST_Y(geom))
+                SELECT json_build_object('x', ST_Y(geom), 'y', ST_X(geom))
                 FROM ST_DumpPoints(ST_ExteriorRing(t.geom))
             )) as vertices
         FROM registro_grafico.gra_cm_mensura_pertenencias_pga07 t

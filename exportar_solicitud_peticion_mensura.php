@@ -202,7 +202,7 @@ if ($busqueda_expte !== '') {
             t.geom
         FROM registro_grafico.gra_cm_mensura_pertenencias_pga07 t
         WHERE t.expte_siged LIKE $1
-        ORDER BY t.id_pert::int ASC
+        ORDER BY t.mens_id ASC, t.id_pert ASC
     ";
 
     $result1 = pg_query_params($conn, $sql1, $params);
@@ -302,10 +302,14 @@ if ($busqueda_expte !== '') {
         echo "</table>";
         
         // Extraer vértices directamente en PHP
+        // IMPORTANTE: En PostGIS guardamos como (Y,X) = (ESTE,NORTE)
+        // Al extraer con ST_X obtenemos ESTE y con ST_Y obtenemos NORTE
+        // Por lo tanto: x=ST_X=ESTE (Y original), y=ST_Y=NORTE (X original)
         $vertices = [];
         if ($row2['geom']) {
             // Usar una consulta separada para obtener los vértices
-            $sql_vertices = "SELECT ST_X((dp).geom) as x, ST_Y((dp).geom) as y 
+            // ST_X devuelve el ESTE (nuestro Y), ST_Y devuelve el NORTE (nuestro X)
+            $sql_vertices = "SELECT ST_Y((dp).geom) as x, ST_X((dp).geom) as y 
                             FROM ST_DumpPoints($1) AS dp";
             $result_vertices = pg_query_params($conn, $sql_vertices, [$row2['geom']]);
             
