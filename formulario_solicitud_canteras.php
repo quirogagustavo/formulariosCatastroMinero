@@ -293,10 +293,12 @@ if (!isset($_SESSION['usuario'])) {
     <div class="col-md-4">
       <label class="form-label fw-bold">X (ESTE)</label>
       <input type="number" id="x" class="form-control" required step="0.01" min="0" placeholder="0.00">
+      <small class="text-muted">Debe comenzar con 2</small>
     </div>
     <div class="col-md-4">
       <label class="form-label fw-bold">Y (NORTE)</label>
       <input type="number" id="y" class="form-control" required step="0.01" min="0" placeholder="0.00">
+      <small class="text-muted">Debe comenzar con 6</small>
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
