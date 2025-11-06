@@ -2,13 +2,15 @@
 -- PASO 1: CREAR SRID PERSONALIZADO CON PARÁMETROS IGN PARA SAN JUAN
 -- =====================================================================
 -- PARÁMETROS IGN PARA SAN JUAN (Red PASMA):
--- ΔX = -11.2955 m
--- ΔY = -6.6872 m  
--- ΔZ = 3.8411 m
--- Rx = 0.2146476142 arcsec
--- Ry = -0.1020253503 arcsec
--- Rz = 0.0631241199 arcsec
--- μ = 0.0385966400 ppm
+-- Fuente: Documento oficial IGN - Tabla de parámetros PASMA
+-- ΔX = -11.340 m
+-- ΔY = -6.686 m  
+-- ΔZ = 3.836 m
+-- Rx = 0.214569 arcsec
+-- Ry = -0.102025 arcsec
+-- Rz = 0.374988 arcsec
+-- μ = 0.1211736000 ppm
+-- Precisión: ±0.003m Este, ±0.003m Norte, ±0.005m Altura
 
 -- Eliminar si existe
 DELETE FROM spatial_ref_sys WHERE srid = 922182;
@@ -19,8 +21,8 @@ VALUES (
     922182,
     'CUSTOM',
     922182,
-    'PROJCS["POSGAR 94 / Argentina 2 (IGN San Juan)",GEOGCS["POSGAR 94",DATUM["Posiciones_Geodesicas_Argentinas_1994",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[-11.2955,-6.6872,3.8411,0.2146476142,-0.1020253503,0.0631241199,0.0385966400],AUTHORITY["EPSG","6694"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4694"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",-90],PARAMETER["central_meridian",-69],PARAMETER["scale_factor",1],PARAMETER["false_easting",2500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","22182"]]',
-    '+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.2955,-6.6872,3.8411,0.2146476142,-0.1020253503,0.0631241199,0.0385966400 +units=m +no_defs'
+    'PROJCS["POSGAR 94 / Argentina 2 (IGN San Juan)",GEOGCS["POSGAR 94",DATUM["Posiciones_Geodesicas_Argentinas_1994",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[-11.340,-6.686,3.836,0.214569,-0.102025,0.374988,0.1211736000],AUTHORITY["EPSG","6694"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4694"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",-90],PARAMETER["central_meridian",-69],PARAMETER["scale_factor",1],PARAMETER["false_easting",2500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","22182"]]',
+    '+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.214569,-0.102025,0.374988,0.1211736000 +units=m +no_defs'
 );
 
 -- =====================================================================
@@ -47,8 +49,9 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 COMMENT ON FUNCTION transform_posgar94_to_posgar2007_ign IS 
 'Transforma geometrías de POSGAR 94 (Faja 2) a POSGAR 2007 (Faja 2) 
 usando los parámetros oficiales del IGN para la provincia de San Juan.
-Parámetros Helmert 7: ΔX=-11.2955, ΔY=-6.6872, ΔZ=3.8411, 
-Rx=0.2146476142, Ry=-0.1020253503, Rz=0.0631241199, μ=0.0385966400';
+Parámetros Helmert 7: ΔX=-11.340, ΔY=-6.686, ΔZ=3.836, 
+Rx=0.214569, Ry=-0.102025, Rz=0.374988, μ=0.1211736000
+Precisión: ±0.003m Este, ±0.003m Norte, ±0.005m Altura';
 
 -- =====================================================================
 -- FUNCIÓN DE PRUEBA Y COMPARACIÓN

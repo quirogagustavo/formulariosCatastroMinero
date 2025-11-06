@@ -25,16 +25,22 @@ Los siguientes parámetros son **oficiales** del Instituto Geográfico Nacional 
 
 | Parámetro | Símbolo | Valor | Unidad |
 |-----------|---------|-------|--------|
-| Traslación X | ΔX | -11.2955 | metros |
-| Traslación Y | ΔY | -6.6872 | metros |
-| Traslación Z | ΔZ | 3.8411 | metros |
-| Rotación X | Rx | 0.2146476142 | segundos de arco |
-| Rotación Y | Ry | -0.1020253503 | segundos de arco |
-| Rotación Z | Rz | 0.0631241199 | segundos de arco |
-| Factor de escala | μ | 0.0385966400 | ppm |
+| Traslación X | ΔX | -11.340 | metros |
+| Traslación Y | ΔY | -6.686 | metros |
+| Traslación Z | ΔZ | 3.836 | metros |
+| Rotación X | Rx | 0.214569 | segundos de arco |
+| Rotación Y | Ry | -0.102025 | segundos de arco |
+| Rotación Z | Rz | 0.374988 | segundos de arco |
+| Factor de escala | μ | 0.1211736000 | ppm |
+
+**Precisión de la transformación:**
+- Desvío estándar en Este: ±0.003 m
+- Desvío estándar en Norte: ±0.003 m
+- Desvío estándar en Altura: ±0.005 m
 
 **Fuente:** Red PASMA (Posiciones Geodésicas de Alta Precisión para San Juan y Mendoza)  
-**Método:** Transformación de Helmert de 7 parámetros
+**Método:** Transformación de Helmert de 7 parámetros  
+**Documento:** Tabla oficial de parámetros IGN
 
 ---
 
@@ -48,14 +54,14 @@ Prueba realizada con coordenadas de ejemplo:
 | Método | NORTE (2007) | ESTE (2007) | Diferencia NORTE | Diferencia ESTE |
 |--------|--------------|-------------|------------------|-----------------|
 | PostGIS estándar | 6677724.38 m | 2492371.13 m | - | - |
-| **IGN San Juan** | **6677723.15 m** | **2492362.31 m** | **-1.23 m** | **-8.82 m** |
+| **IGN San Juan** | **6677723.15 m** | **2492370.62 m** | **-1.24 m** | **-0.51 m** |
 
 ### Conclusión:
 La transformación con parámetros IGN difiere significativamente de la transformación estándar de PostGIS:
-- **1.23 metros** en dirección NORTE
-- **8.82 metros** en dirección ESTE
+- **1.24 metros** en dirección NORTE
+- **0.51 metros** en dirección ESTE
 
-Esta diferencia es **geodésicamente significativa** para trabajos catastrales de precisión.
+Esta diferencia es **geodésicamente significativa** para trabajos catastrales de precisión, especialmente considerando que la precisión declarada de la transformación es de ±3 mm en coordenadas planimétricas.
 
 ---
 
@@ -73,7 +79,7 @@ Se creó un nuevo SRID personalizado en la base de datos PostGIS:
 ```
 +proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 
 +ellps=WGS84 
-+towgs84=-11.2955,-6.6872,3.8411,0.2146476142,-0.1020253503,0.0631241199,0.0385966400 
++towgs84=-11.340,-6.686,3.836,0.214569,-0.102025,0.374988,0.1211736000 
 +units=m +no_defs
 ```
 
@@ -235,7 +241,7 @@ SELECT * FROM comparar_transformaciones(6677723.79, 2492370.91);
       metodo       |    norte_2007     |     este_2007     | diff_norte | diff_este
 -------------------+-------------------+-------------------+------------+------------
  PostGIS estándar  | 6677724.3815087965| 2492371.1283056596|     0      |     0
- IGN San Juan      | 6677723.148738802 | 2492362.3087951373| -1.2327... | -8.8195...
+ IGN San Juan      | 6677723.145347592 | 2492370.622606886 | -1.2361... | -0.5056...
 ```
 
 ---
@@ -369,7 +375,15 @@ Esta implementación está diseñada específicamente para el sistema de **Catas
 
 | Versión | Fecha | Descripción | Commit |
 |---------|-------|-------------|--------|
+| 1.1 | 2025-11-06 | **Corrección de parámetros IGN** - Actualización con valores del documento oficial IGN. Cambios críticos en Rz (0.0631→0.3750) y μ (0.0386→0.1212) | Pendiente |
 | 1.0 | 2025-11-06 | Implementación inicial con parámetros IGN San Juan | 1d34eb8 |
+
+### Notas de la versión 1.1:
+Se corrigieron los parámetros de transformación después de revisar el documento oficial del IGN. Los cambios más significativos fueron:
+- **Rz (Rotación en Z):** 0.0631241199 → **0.374988** arcsec (cambio de +493%)
+- **μ (Factor de escala):** 0.0385966400 → **0.1211736000** ppm (cambio de +214%)
+
+Estos cambios redujeron la diferencia en ESTE de 8.82m a 0.51m, mejorando significativamente la precisión de la transformación.
 
 ---
 
