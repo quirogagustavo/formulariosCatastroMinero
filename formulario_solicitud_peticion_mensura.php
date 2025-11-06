@@ -574,7 +574,8 @@ function dibujarMultipoligonos(){
   multipoligonos.forEach(pol=>{
     if(pol.vertices.length<3) return;
     const coords = pol.vertices.map(p=>{
-      const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]);
+      // proj4 espera [ESTE, NORTE] = [Y, X] porque p.x=NORTE, p.y=ESTE
+      const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]);
       return [lat,lon];
     });
 
@@ -598,7 +599,7 @@ function dibujarMultipoligonos(){
     }).addTo(map);
 
     pol.vertices.forEach(p=>{
-      const [lon,lat] = proj4(fromProjection,toProjection,[p.x,p.y]);
+      const [lon,lat] = proj4(fromProjection,toProjection,[p.y,p.x]);
       L.marker([lat,lon],{
     icon: L.divIcon({
         className: 'vertice-label',
@@ -621,7 +622,7 @@ function dibujarSolicitudes(){
     if(!pol.vertices || pol.vertices.length<3) return;
 
     const coords = pol.vertices.map(p=>{ 
-      const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); 
+      const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]); 
       return [lat,lon]; 
     });
 
@@ -639,7 +640,7 @@ function dibujarSolicitudes(){
 
     
     pol.vertices.forEach(p=>{
-      const [lon,lat] = proj4(fromProjection,toProjection,[p.x,p.y]);
+      const [lon,lat] = proj4(fromProjection,toProjection,[p.y,p.x]);
       L.marker([lat,lon],{
         icon: L.divIcon({
         className: 'vertice-label',
@@ -757,10 +758,10 @@ function dibujarTemporalPerimetro(){
   perimetroLayers = [];
   if (perimetroVertices.length === 0) return;
 
-  const coords = perimetroVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lat,lon]; });
+  const coords = perimetroVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]); return [lat,lon]; });
 
   perimetroVertices.forEach(p=>{
-    const [lon,lat] = proj4(fromProjection,toProjection,[p.x,p.y]);
+    const [lon,lat] = proj4(fromProjection,toProjection,[p.y,p.x]);
     const m = L.marker([lat,lon],{
       icon: L.divIcon({ className: 'vertice-label', html: p.id_v })
     }).addTo(map);
@@ -892,10 +893,10 @@ function dibujarTemporalPertenencia(){
   pertenenciaLayers = [];
   if (pertenenciaVertices.length === 0) return;
 
-  const coords = pertenenciaVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lat,lon]; });
+  const coords = pertenenciaVertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]); return [lat,lon]; });
 
   pertenenciaVertices.forEach(p=>{
-    const [lon,lat] = proj4(fromProjection,toProjection,[p.x,p.y]);
+    const [lon,lat] = proj4(fromProjection,toProjection,[p.y,p.x]);
     const m = L.marker([lat,lon],{
       icon: L.divIcon({ className: 'vertice-label', html: p.id_v })
     }).addTo(map);
@@ -1071,7 +1072,7 @@ function actualizarLista(){
 
   solicitudesMensura.forEach((pol,idx)=>{
     // Para visualización: convertir a WGS84
-    const coords = pol.vertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); return [lon,lat]; });
+    const coords = pol.vertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]); return [lon,lat]; });
     if(coords.length>2) coords.push(coords[0]);
 
     // IMPORTANTE: Calcular área con coordenadas proyectadas (metros), NO geográficas (grados)
@@ -1102,7 +1103,7 @@ function actualizarLista(){
   multipoligonos.forEach((pol,idx)=>{
     // Para visualización: convertir a WGS84
     const coords = pol.vertices.map(p=>{ 
-      const [lon,lat]=proj4(fromProjection,toProjection,[p.x,p.y]); 
+      const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]); 
       return [lon,lat]; 
     });
     if(coords.length>2) coords.push(coords[0]);
