@@ -32,11 +32,11 @@
     <legend class="h5">Ingresar Coordenadas Gauss Krüger Faja 2 POSGAR 2007 (EPSG:5344)</legend>
     <div class="row g-3 align-items-end">
     <div class="col-md-4">
-      <label class="form-label">ESTE</label>
+      <label class="form-label fw-bold">X (ESTE)</label>
       <input type="number" id="x" class="form-control" required step="0.01" min="0" placeholder="0.00">
     </div>
     <div class="col-md-4">
-      <label class="form-label">NORTE</label>
+      <label class="form-label fw-bold">Y (NORTE)</label>
       <input type="number" id="y" class="form-control" required step="0.01" min="0" placeholder="0.00">
     </div>
     <div class="col-md-4">
@@ -256,10 +256,27 @@ function actualizarControlCapas() {
     const toProjection = proj4("WGS84");   
 
     function agregarPunto() {
-      const x = parseFloat(document.getElementById("x").value);
-      const y = parseFloat(document.getElementById("y").value);
+      const ix = document.getElementById("x");
+      const iy = document.getElementById("y");
+      const x = parseFloat(ix.value);
+      const y = parseFloat(iy.value);
+      
       if (isNaN(x) || isNaN(y)) {
         alert("Por favor ingresa valores válidos para ESTE y NORTE");
+        return;
+      }
+
+      // Validar que X (ESTE) comience con 2 (rango 2000000-2999999)
+      if (y < 2000000 || y >= 3000000) {
+        alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
+        iy.focus();
+        return;
+      }
+
+      // Validar que Y (NORTE) comience con 6 (rango 6000000-6999999)
+      if (x < 6000000 || x >= 7000000) {
+        alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
+        ix.focus();
         return;
       }
 
