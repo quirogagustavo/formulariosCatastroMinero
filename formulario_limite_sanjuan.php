@@ -277,7 +277,7 @@ function dibujarPoligono() {
   if (puntos.length < 3) return;
 
   const coords = puntos.map(p => {
-    const [lon, lat] = proj4(fromProjection, toProjection, [p.x, p.y]);
+    const [lon, lat] = proj4(fromProjection, toProjection, [p.y, p.x]);
     return [lon, lat];
   });
 

@@ -405,7 +405,7 @@ if (!isset($_SESSION['usuario'])) {
       if (poligonoLayer) map.removeLayer(poligonoLayer);
       if (puntos.length < 3) return;
       const coords = puntos.map(p => {
-        const [lon, lat] = proj4(fromProjection, toProjection, [p.x, p.y]);
+        const [lon, lat] = proj4(fromProjection, toProjection, [p.y, p.x]);
         return [lat, lon];
       });
       poligonoLayer = L.polygon(coords, { color: 'blue' }).addTo(map);
