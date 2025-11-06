@@ -328,14 +328,14 @@ if (!isset($_SESSION['usuario'])) {
       <h6 class="text-success"><i class="bi bi-pencil-square"></i> Opción B: Ingreso manual de vértices</h6>
       <div class="row g-3 align-items-end">
         <div class="col-md-3">
-          <label class="form-label fw-bold">X (NORTE)</label>
-          <input type="number" id="x_perimetro" class="form-control" step="0.01" min="6000000" placeholder="6XXXXXX.XX">
-          <small class="text-muted">Debe comenzar con 6</small>
+          <label class="form-label fw-bold">X (ESTE)</label>
+          <input type="number" id="y_perimetro" class="form-control" step="0.01" placeholder="2XXXXXX.XX">
+          <small class="text-muted">Debe comenzar con 2</small>
         </div>
         <div class="col-md-3">
-          <label class="form-label fw-bold">Y (ESTE)</label>
-          <input type="number" id="y_perimetro" class="form-control" step="0.01" min="2000000" placeholder="2XXXXXX.XX">
-          <small class="text-muted">Debe comenzar con 2</small>
+          <label class="form-label fw-bold">Y (NORTE)</label>
+          <input type="number" id="x_perimetro" class="form-control" step="0.01" placeholder="6XXXXXX.XX">
+          <small class="text-muted">Debe comenzar con 6</small>
         </div>
         <div class="col-md-6">
           <div class="d-flex gap-2">
@@ -366,8 +366,8 @@ if (!isset($_SESSION['usuario'])) {
               <thead class="table-success">
                 <tr>
                   <th style="width: 15%;">Vértice</th>
-                  <th style="width: 35%;">X (NORTE)</th>
-                  <th style="width: 35%;">Y (ESTE)</th>
+                  <th style="width: 35%;">X (ESTE)</th>
+                  <th style="width: 35%;">Y (NORTE)</th>
                   <th style="width: 15%;">Acciones</th>
                 </tr>
               </thead>
@@ -414,14 +414,14 @@ if (!isset($_SESSION['usuario'])) {
       <h6 class="text-primary"><i class="bi bi-pencil-square"></i> Opción B: Ingreso manual de vértices</h6>
       <div class="row g-3 align-items-end">
         <div class="col-md-3">
-          <label class="form-label fw-bold">X (NORTE)</label>
-          <input type="number" id="x_pertenencia" class="form-control" step="0.01" min="6000000" placeholder="6XXXXXX.XX">
-          <small class="text-muted">Debe comenzar con 6</small>
+          <label class="form-label fw-bold">X (ESTE)</label>
+          <input type="number" id="y_pertenencia" class="form-control" step="0.01" placeholder="2XXXXXX.XX">
+          <small class="text-muted">Debe comenzar con 2</small>
         </div>
         <div class="col-md-3">
-          <label class="form-label fw-bold">Y (ESTE)</label>
-          <input type="number" id="y_pertenencia" class="form-control" step="0.01" min="2000000" placeholder="2XXXXXX.XX">
-          <small class="text-muted">Debe comenzar con 2</small>
+          <label class="form-label fw-bold">Y (NORTE)</label>
+          <input type="number" id="x_pertenencia" class="form-control" step="0.01" placeholder="6XXXXXX.XX">
+          <small class="text-muted">Debe comenzar con 6</small>
         </div>
         <div class="col-md-6">
           <div class="d-flex gap-2">
@@ -452,8 +452,8 @@ if (!isset($_SESSION['usuario'])) {
               <thead class="table-primary">
                 <tr>
                   <th style="width: 15%;">Vértice</th>
-                  <th style="width: 35%;">X (NORTE)</th>
-                  <th style="width: 35%;">Y (ESTE)</th>
+                  <th style="width: 35%;">X (ESTE)</th>
+                  <th style="width: 35%;">Y (NORTE)</th>
                   <th style="width: 15%;">Acciones</th>
                 </tr>
               </thead>
@@ -669,17 +669,18 @@ function agregarPuntoPerimetro(){
     return;
   }
   
-  // Validar que X (NORTE) comience con 6
-  if (x < 6000000 || x >= 7000000){
-    alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
-    ix.focus();
+  // Validar que X (ESTE) comience con 2
+  // Nota: y_perimetro contiene ESTE, x_perimetro contiene NORTE
+  if (y < 2000000 || y >= 3000000){
+    alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+    iy.focus();
     return;
   }
   
-  // Validar que Y (ESTE) comience con 2
-  if (y < 2000000 || y >= 3000000){
-    alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
-    iy.focus();
+  // Validar que Y (NORTE) comience con 6
+  if (x < 6000000 || x >= 7000000){
+    alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+    ix.focus();
     return;
   }
   
@@ -733,8 +734,8 @@ function actualizarTablaPerimetro(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="text-center"><strong>V${punto.id_v}</strong></td>
-      <td>${punto.x.toFixed(2)}</td>
       <td>${punto.y.toFixed(2)}</td>
+      <td>${punto.x.toFixed(2)}</td>
       <td class="text-center">
         <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPerimetroPorIndice(${index})" title="Eliminar punto">
           <i class="bi bi-trash"></i>
@@ -810,17 +811,18 @@ function agregarPuntoPertenencia(){
     return;
   }
   
-  // Validar que X (NORTE) comience con 6
-  if (x < 6000000 || x >= 7000000){
-    alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
-    ix.focus();
+  // Validar que X (ESTE) comience con 2
+  // Nota: y_pertenencia contiene ESTE, x_pertenencia contiene NORTE
+  if (y < 2000000 || y >= 3000000){
+    alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+    iy.focus();
     return;
   }
   
-  // Validar que Y (ESTE) comience con 2
-  if (y < 2000000 || y >= 3000000){
-    alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
-    iy.focus();
+  // Validar que Y (NORTE) comience con 6
+  if (x < 6000000 || x >= 7000000){
+    alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+    ix.focus();
     return;
   }
   
@@ -868,8 +870,8 @@ function actualizarTablaPertenencia(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="text-center"><strong>V${punto.id_v}</strong></td>
-      <td>${punto.x.toFixed(2)}</td>
       <td>${punto.y.toFixed(2)}</td>
+      <td>${punto.x.toFixed(2)}</td>
       <td class="text-center">
         <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPertenenciaPorIndice(${index})" title="Eliminar punto">
           <i class="bi bi-trash"></i>
