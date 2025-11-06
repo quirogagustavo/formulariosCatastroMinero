@@ -65,11 +65,11 @@ foreach($solicitudes as $s){
     $sup_decl    = isset($s['sup_decl'])    ? floatval($s['sup_decl'])    : 0;
     $id_pol    =  $s['id_mensura'];
 
-    // Si el usuario seleccionó POSGAR 94, transformar a POSGAR 2007
+    // Si el usuario seleccionó POSGAR 94, transformar a POSGAR 2007 con parámetros IGN
     if ($srid_origen == 22182) {
         $q = "INSERT INTO registro_grafico.gra_cm_mensura_area_pga07
                 (mensar_id, expte_siged, fecha_solicitud, depto, tipo_yac, geom, sup_graf_ha, sup_decla_ha, denom, sup_decla_men_ha, id_pol)
-              VALUES ($1,$2,$3,$4,$5, ST_Transform(ST_GeomFromText($6,22182), 5344), $7, $8, $9, $10, $11)";
+              VALUES ($1,$2,$3,$4,$5, transform_posgar94_to_posgar2007_ign(ST_GeomFromText($6,22182)), $7, $8, $9, $10, $11)";
     } else {
         $q = "INSERT INTO registro_grafico.gra_cm_mensura_area_pga07
                 (mensar_id, expte_siged, fecha_solicitud, depto, tipo_yac, geom, sup_graf_ha, sup_decla_ha, denom, sup_decla_men_ha, id_pol)
@@ -110,11 +110,11 @@ foreach($multipoligonos as $pert){
     $coords_wkt = array_map(fn($c)=>implode(' ',$c), $coords);
     $wkt = "POLYGON((" . implode(',', $coords_wkt) . "))";
 
-    // Si el usuario seleccionó POSGAR 94, transformar a POSGAR 2007
+    // Si el usuario seleccionó POSGAR 94, transformar a POSGAR 2007 con parámetros IGN
     if ($srid_origen == 22182) {
         $q = "INSERT INTO registro_grafico.gra_cm_mensura_pertenencias_pga07
                 (mens_id, id_pol, id_pert, geom, sup_graf_ha, sup_solic_ha, denom, sup_decla_men_ha, tipo_yac, expte_siged)
-              VALUES ($1,$2,$3, ST_Transform(ST_GeomFromText($4,22182), 5344), $5, $6, $7, $8, $9, $10)";
+              VALUES ($1,$2,$3, transform_posgar94_to_posgar2007_ign(ST_GeomFromText($4,22182)), $5, $6, $7, $8, $9, $10)";
     } else {
         $q = "INSERT INTO registro_grafico.gra_cm_mensura_pertenencias_pga07
                 (mens_id, id_pol, id_pert, geom, sup_graf_ha, sup_solic_ha, denom, sup_decla_men_ha, tipo_yac, expte_siged)
