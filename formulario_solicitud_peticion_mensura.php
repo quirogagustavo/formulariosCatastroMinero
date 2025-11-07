@@ -1341,11 +1341,13 @@ function validarSecuenciaPoligono(vertices, nombre) {
   }
   
   // Calcular área con signo
+  // Recordar: p.x = NORTE (6M), p.y = ESTE (2M)
+  // Fórmula Shoelace: area = Σ(ESTE[j] - ESTE[i]) * (NORTE[j] + NORTE[i]) / 2
   let area = 0;
   const n = vertices.length;
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
-    area += (vertices[j].x - vertices[i].x) * (vertices[j].y + vertices[i].y);
+    area += (vertices[j].y - vertices[i].y) * (vertices[j].x + vertices[i].x);
   }
   area = area / 2;
   
