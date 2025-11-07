@@ -794,6 +794,70 @@ function finalizarPerimetroManual(){
   limpiarPerimetro();
   dibujarSolicitudes();
   alert('✅ Perímetro de mensura finalizado correctamente');
+  
+  // Preguntar si solo hay una pertenencia
+  preguntarPertenenciaUnica();
+}
+
+/**
+ * Pregunta al usuario si la mensura tiene una sola pertenencia
+ * Si responde afirmativamente, crea automáticamente la pertenencia con las coordenadas del perímetro
+ */
+function preguntarPertenenciaUnica() {
+  const respuesta = confirm('¿Esta mensura tiene una sola pertenencia?\n\nSi responde SÍ, se creará automáticamente una pertenencia con las mismas coordenadas del perímetro.');
+  
+  if (respuesta) {
+    crearPertenenciaAutomatica();
+  }
+}
+
+/**
+ * Crea automáticamente una pertenencia con las coordenadas del perímetro
+ */
+function crearPertenenciaAutomatica() {
+  if (solicitudesMensura.length === 0) {
+    alert('⚠️ ERROR: No existe un perímetro de mensura.');
+    return;
+  }
+  
+  // Verificar que no existan pertenencias ya creadas
+  if (multipoligonos.length > 0) {
+    const confirmar = confirm('⚠️ ADVERTENCIA: Ya existen pertenencias creadas.\n\n¿Desea crear una nueva pertenencia con las coordenadas del perímetro de todas formas?');
+    if (!confirmar) return;
+  }
+  
+  const perimetro = solicitudesMensura[0];
+  
+  // Solicitar ID de solicitud
+  const id_sol = prompt('Ingrese ID de Solicitud (número):', '1');
+  if (!id_sol) {
+    alert('⚠️ Operación cancelada: No se ingresó ID de Solicitud.');
+    return;
+  }
+  
+  // Solicitar ID de pertenencia
+  const id_pert = prompt('Ingrese ID de Pertenencia (ej: P1, P2, etc.):', 'P1');
+  if (!id_pert) {
+    alert('⚠️ Operación cancelada: No se ingresó ID de Pertenencia.');
+    return;
+  }
+  
+  // Crear objeto de pertenencia con las mismas coordenadas del perímetro
+  const pertenencia = {
+    id_sol: id_sol,
+    id_p: id_pert,
+    vertices: perimetro.vertices.slice(), // Copiar los vértices del perímetro
+    sup_decl: 0,
+    sup_graf_ha: 0
+  };
+  
+  multipoligonos.push(pertenencia);
+  document.getElementById('multipoligonos').value = JSON.stringify(multipoligonos);
+  
+  dibujarMultipoligonos();
+  actualizarLista();
+  
+  alert('✅ Pertenencia ' + id_pert + ' creada automáticamente con las coordenadas del perímetro');
 }
 
 // ============================================
@@ -1244,6 +1308,11 @@ function importarSolicitudMensura(){
     
     document.getElementById("solicitudes_mensura").value = JSON.stringify(solicitudesMensura);
     dibujarSolicitudes();
+    
+    // Después de importar el perímetro, preguntar si es de una sola pertenencia
+    if (solicitudesMensura.length > 0) {
+      preguntarPertenenciaUnica();
+    }
   };
   reader.readAsText(file,"UTF-8");
 }
