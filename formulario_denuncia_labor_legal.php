@@ -255,29 +255,41 @@ if (!isset($_SESSION['usuario'])) {
 
       <hr class="my-4" />
 <fieldset>
-  <legend class="h4">Ingresar Coordenadas Gauss Krüger Faja 2 POSGAR 2007 (EPSG:5344)</legend>
+  <legend class="h4">Ingresar Coordenadas Gauss Krüger Faja 2</legend>
   
   <div class="alert alert-info">
     <h6><strong>📋 NORMATIVA CATASTRAL - Ubicación de Labor Legal:</strong></h6>
     <ul class="mb-0">
       <li><strong>Ubicación:</strong> Coordenadas exactas donde se ejecutó la labor legal</li>
-      <li><strong>Precisión:</strong> Utilizar coordenadas Gauss Krüger Faja 2 POSGAR 2007</li>
+      <li><strong>Precisión:</strong> Utilizar coordenadas Gauss Krüger Faja 2</li>
+      <li><strong>Sistema destino:</strong> POSGAR 2007 (EPSG:5344)</li>
       <li><strong>Validación:</strong> La labor debe estar dentro de los límites de la manifestación</li>
     </ul>
   </div>
   
+  <!-- Selector de Sistema de Coordenadas -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-12">
+      <label class="form-label fw-bold">Sistema de Coordenadas de Entrada</label>
+      <select id="sistemaCoordenadasLabor" class="form-select" onchange="actualizarPlaceholdersLabor()">
+        <option value="5344">POSGAR 2007 (EPSG:5344) - Recomendado</option>
+        <option value="22182">POSGAR 94 (EPSG:22182) - Se convertirá automáticamente</option>
+      </select>
+      <small class="text-muted">Si sus coordenadas están en POSGAR 94, se convertirán automáticamente a POSGAR 2007 usando los parámetros oficiales del IGN.</small>
+    </div>
+  </div>
   
  <div id="lugarExtraccion" style="display:block; margin-top:1rem;">
   <div class="row g-3 align-items-end">
     
     <legend class="h5">INGRESO DE COORDENADAS LA LABOR LEGAL</legend>
     <div class="col-md-4">
-      <label class="form-label">ESTE</label>
-      <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" min="0" placeholder="0.00">
+      <label class="form-label">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+      <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
     </div>
     <div class="col-md-4">
-      <label class="form-label">NORTE</label>
-      <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" min="0" placeholder="0.00">
+      <label class="form-label">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+      <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -346,7 +358,16 @@ if (!isset($_SESSION['usuario'])) {
     let poligonoLayer;
     let marcadorUnico = null;
 
+    // Definiciones de sistemas de coordenadas
+    // POSGAR 94 (EPSG:22182)
     proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
+    
+    // POSGAR 2007 (EPSG:5344) - Faja 2
+    proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+    
+    // POSGAR 94 personalizado con parámetros IGN para transformación a WGS84
+    proj4.defs("EPSG:922182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
     {
@@ -356,26 +377,106 @@ if (!isset($_SESSION['usuario'])) {
     );
 
     const fromProjection = proj4("EPSG:22182");
-    const toProjection = proj4("WGS84");  
+    const toProjection = proj4("WGS84");
+    
+    /**
+     * Actualiza los placeholders de los campos según el sistema de coordenadas seleccionado
+     */
+    function actualizarPlaceholdersLabor() {
+      const sistema = document.getElementById('sistemaCoordenadasLabor').value;
+      const inputX = document.getElementById('muestra_x');
+      const inputY = document.getElementById('muestra_y');
+      
+      if (sistema === '5344') {
+        // POSGAR 2007
+        inputX.placeholder = 'Ejemplo: 2492370.69';
+        inputY.placeholder = 'Ejemplo: 6677723.20';
+      } else {
+        // POSGAR 94
+        inputX.placeholder = 'Ejemplo: 2492382.03';
+        inputY.placeholder = 'Ejemplo: 6677729.89';
+      }
+    }
+    
+    /**
+     * Convierte coordenadas de POSGAR 94 a POSGAR 2007 usando parámetros oficiales del IGN
+     */
+    function convertirPOSGAR94aPOSGAR2007(este94, norte94) {
+      // 1. POSGAR 94 con parámetros IGN -> WGS84
+      const [lon, lat] = proj4('EPSG:922182', 'WGS84', [este94, norte94]);
+      
+      // 2. WGS84 -> POSGAR 2007
+      const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
+      
+      return { este: este07, norte: norte07 };
+    }
 
     function agregarPuntoUnico() {
-  const muestra_x = parseFloat(document.getElementById("muestra_x").value);
-  const muestra_y = parseFloat(document.getElementById("muestra_y").value);
-  if (isNaN(muestra_x) || isNaN(muestra_y)) {
-    alert("Por favor ingresa valores válidos para ESTE y NORTE en lugar de extracción de muestra");
-    return;
-  }
+      let muestra_x = parseFloat(document.getElementById("muestra_x").value);
+      let muestra_y = parseFloat(document.getElementById("muestra_y").value);
+      
+      if (isNaN(muestra_x) || isNaN(muestra_y)) {
+        alert("Por favor ingresa valores válidos para X (ESTE) e Y (NORTE)");
+        return;
+      }
+      
+      const sistema = document.getElementById('sistemaCoordenadasLabor').value;
+      
+      // Validar rangos según el sistema de coordenadas
+      if (sistema === '5344') {
+        // POSGAR 2007: ESTE debe comenzar con 2, NORTE con 6
+        if (muestra_x < 2000000 || muestra_x >= 3000000) {
+          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+          document.getElementById("muestra_x").focus();
+          return;
+        }
+        if (muestra_y < 6000000 || muestra_y >= 7000000) {
+          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+          document.getElementById("muestra_y").focus();
+          return;
+        }
+      } else {
+        // POSGAR 94: rangos similares pero se convertirán
+        if (muestra_x < 2000000 || muestra_x >= 3000000) {
+          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
+          document.getElementById("muestra_x").focus();
+          return;
+        }
+        if (muestra_y < 6000000 || muestra_y >= 7000000) {
+          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
+          document.getElementById("muestra_y").focus();
+          return;
+        }
+        
+        // Convertir de POSGAR 94 a POSGAR 2007
+        const convertido = convertirPOSGAR94aPOSGAR2007(muestra_x, muestra_y);
+        console.log(`Conversión POSGAR 94 -> 2007: (${muestra_x}, ${muestra_y}) -> (${convertido.este.toFixed(2)}, ${convertido.norte.toFixed(2)})`);
+        
+        // Actualizar valores a POSGAR 2007
+        muestra_x = convertido.este;
+        muestra_y = convertido.norte;
+        
+        // Mostrar mensaje informativo
+        alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
+              `ESTE: ${muestra_x.toFixed(2)}\n` +
+              `NORTE: ${muestra_y.toFixed(2)}\n\n` +
+              `Las coordenadas se guardarán en POSGAR 2007.`);
+      }
+      
+      // Usar POSGAR 2007 para visualización
+      const [lon, lat] = proj4('EPSG:5344', 'WGS84', [muestra_x, muestra_y]);
 
-  const [lon, lat] = proj4(fromProjection, toProjection, [muestra_x, muestra_y]);
+      // Si ya hay un marcador anterior, eliminarlo
+      if (marcadorUnico) {
+        map.removeLayer(marcadorUnico);
+      }
 
-  // Si ya hay un marcador anterior, eliminarlo
-  if (marcadorUnico) {
-    map.removeLayer(marcadorUnico);
-  }
-
-  marcadorUnico = L.marker([lat, lon]).addTo(map)
-    .bindPopup(`ESTE: ${muestra_x}, NORTE: ${muestra_y}`)
-    .openPopup();
+      marcadorUnico = L.marker([lat, lon]).addTo(map)
+        .bindPopup(`ESTE: ${muestra_x.toFixed(2)}, NORTE: ${muestra_y.toFixed(2)}`)
+        .openPopup();
+      
+      map.setView([lat, lon], 13);
+    }
 
   
 }
@@ -385,8 +486,8 @@ function eliminarUltimoPuntoUnico(event) {
   if (marcadorUnico) {
     map.removeLayer(marcadorUnico);
     marcadorUnico = null;
-    document.getElementById("muestra_x").value = '0.00';
-    document.getElementById("muestra_y").value = '0.00';
+    document.getElementById("muestra_x").value = '';
+    document.getElementById("muestra_y").value = '';
   }
 }
 
