@@ -1077,13 +1077,9 @@ function actualizarLista(){
     const coords = pol.vertices.map(p=>{ const [lon,lat]=proj4(fromProjection,toProjection,[p.y,p.x]); return [lon,lat]; });
     if(coords.length>2) coords.push(coords[0]);
 
-    // IMPORTANTE: Calcular área con coordenadas proyectadas (metros), NO geográficas (grados)
-    // Crear polígono con coordenadas en metros (x, y)
-    const coordsProyectadas = pol.vertices.map(p => [p.y, p.x]); // [ESTE, NORTE] para Turf
-    coordsProyectadas.push(coordsProyectadas[0]); // cerrar polígono
-    
-    // Calcular área en metros cuadrados y convertir a hectáreas
-    pol.sup_graf_ha = turf.area({type:"Polygon", coordinates:[coordsProyectadas]}) / 10000;
+    // Calcular área con coordenadas proyectadas en metros
+    const areaM2 = calcularAreaProyectada(pol.vertices);
+    pol.sup_graf_ha = areaM2 / 10000; // Convertir m² a hectáreas
     const areaHa = (isFinite(pol.sup_graf_ha) ? pol.sup_graf_ha : 0).toFixed(2);
 
     const li = document.createElement("li");
@@ -1110,13 +1106,9 @@ function actualizarLista(){
     });
     if(coords.length>2) coords.push(coords[0]);
 
-    // IMPORTANTE: Calcular área con coordenadas proyectadas (metros), NO geográficas (grados)
-    // Crear polígono con coordenadas en metros (x, y)
-    const coordsProyectadas = pol.vertices.map(p => [p.y, p.x]); // [ESTE, NORTE] para Turf
-    coordsProyectadas.push(coordsProyectadas[0]); // cerrar polígono
-    
-    // Calcular área en metros cuadrados y convertir a hectáreas
-    pol.sup_graf_ha = turf.area({type:"Polygon", coordinates:[coordsProyectadas]}) / 10000;
+    // Calcular área con coordenadas proyectadas en metros
+    const areaM2 = calcularAreaProyectada(pol.vertices);
+    pol.sup_graf_ha = areaM2 / 10000; // Convertir m² a hectáreas
     const areaHa = (isFinite(pol.sup_graf_ha) ? pol.sup_graf_ha : 0).toFixed(2);
     
     const li = document.createElement("li");
@@ -1383,6 +1375,23 @@ function validarSecuenciaPoligonos() {
   }
   
   return true;
+}
+
+// Calcular área de un polígono en metros cuadrados usando fórmula de Shoelace
+// vertices: array de objetos {x: NORTE, y: ESTE}
+// Retorna: área en metros cuadrados (valor absoluto)
+function calcularAreaProyectada(vertices) {
+  if (vertices.length < 3) return 0;
+  
+  // Fórmula Shoelace: area = |Σ(ESTE[j] - ESTE[i]) * (NORTE[j] + NORTE[i])| / 2
+  let area = 0;
+  const n = vertices.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    area += (vertices[j].y - vertices[i].y) * (vertices[j].x + vertices[i].x);
+  }
+  
+  return Math.abs(area / 2); // Retornar valor absoluto en m²
 }
 
 // Validar secuencia de un polígono individual
