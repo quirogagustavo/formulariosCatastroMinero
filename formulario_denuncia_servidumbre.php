@@ -118,20 +118,83 @@ if (!isset($_SESSION['usuario'])) {
       <h5 class="mb-0">Agregar Línea (Servidumbre Lineal)</h5>
     </div>
     <div class="card-body">
+      <!-- Selectores de tipo -->
+      <div class="row g-2 mb-3 bg-light p-2 rounded">
+        <div class="col-md-6">
+          <label class="form-label"><strong>Departamento</strong></label>
+          <select id="linea_departamento" class="form-select">
+            <option value="">-- DEPARTAMENTO --</option>
+            <option value="ALBARDON">ALBARDÓN</option>
+            <option value="ANGACO">ANGACO</option>
+            <option value="CALINGASTA">CALINGASTA</option>
+            <option value="CAPITAL">CAPITAL</option>
+            <option value="CAUCETE">CAUCETE</option>
+            <option value="CHIMBAS">CHIMBAS</option>
+            <option value="IGLESIA">IGLESIA</option>
+            <option value="JACHAL">JÁCHAL</option>
+            <option value="9 DE JULIO">9 DE JULIO</option>
+            <option value="POCITO">POCITO</option>
+            <option value="RAWSON">RAWSON</option>
+            <option value="RIVADAVIA">RIVADAVIA</option>
+            <option value="SAN MARTIN">SAN MARTÍN</option>
+            <option value="SANTA LUCIA">SANTA LUCÍA</option>
+            <option value="SARMIENTO">SARMIENTO</option>
+            <option value="ULLUM">ULLUM</option>
+            <option value="VALLE FERTIL">VALLE FÉRTIL</option>
+            <option value="25 DE MAYO">25 DE MAYO</option>
+            <option value="ZONDA">ZONDA</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><strong>Ancho de la servidumbre (m)</strong></label>
+          <input type="number" id="linea_ancho" class="form-control" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><strong>Tipo de Servidumbre</strong></label>
+          <select id="linea_tipo_servidumbre" class="form-select">
+            <option value="">-- Seleccionar --</option>
+            <option value="CAMINO">Camino</option>
+            <option value="OCUPACIÓN">Ocupación</option>
+            <option value="CONDUCTOS">Conductos</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><strong>Objeto de la Servidumbre</strong></label>
+          <select id="linea_objeto_servidumbre" class="form-select">
+            <option value="">-- Seleccionar --</option>
+            <option value="CAMINO">Camino</option>
+            <option value="CAMPAMENTO">Campamento</option>
+            <option value="DEPOSITO">Deposito</option>
+            <option value="POZOS">Pozos</option>
+            <option value="COMUNICACIÓN">Comunicación</option>
+            <option value="ELECTRODUCTO">Electroducto</option>
+            <option value="INSTALACIONES ELÉCTRICAS">Instalaciones Eléctricas</option>
+            <option value="ALMACÉN">Almacén</option>
+            <option value="ACUEDUCTO">Acueducto</option>
+            <option value="GASODUCTO">Gasoducto</option>
+            <option value="MINERALODUCTO">Mineraloducto</option>
+            <option value="SERVICIOS">Servicios</option>
+            <option value="PLANTA">Planta de Beneficio</option>
+            <option value="ESCOMBRERAS Y COLAS">Escombreras y Colas</option>
+            <option value="AERODROMO">Aerodromo</option>
+            <option value="OBRA">Obra</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Inputs de coordenadas -->
       <div class="row g-2 mb-2">
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
           <input type="number" id="linea_x" class="form-control" step="0.01" placeholder="Ejemplo: 2492370.69">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
           <input type="number" id="linea_y" class="form-control" step="0.01" placeholder="Ejemplo: 6677723.20">
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Ancho (m)</label>
-          <input type="number" id="linea_ancho" class="form-control" step="0.01" min="0" placeholder="0.00">
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">&nbsp;</label>
           <button type="button" class="btn btn-primary w-100" onclick="agregarPuntoLinea()">+ Agregar Punto</button>
         </div>
@@ -150,6 +213,69 @@ if (!isset($_SESSION['usuario'])) {
       <h5 class="mb-0">Agregar Polígono (Servidumbre de Superficie)</h5>
     </div>
     <div class="card-body">
+      <!-- Selectores de tipo -->
+      <div class="row g-2 mb-3 bg-light p-2 rounded">
+        <div class="col-md-4">
+          <label class="form-label"><strong>Departamento</strong></label>
+          <select id="poligono_departamento" class="form-select">
+            <option value="">-- DEPARTAMENTO --</option>
+            <option value="ALBARDON">ALBARDÓN</option>
+            <option value="ANGACO">ANGACO</option>
+            <option value="CALINGASTA">CALINGASTA</option>
+            <option value="CAPITAL">CAPITAL</option>
+            <option value="CAUCETE">CAUCETE</option>
+            <option value="CHIMBAS">CHIMBAS</option>
+            <option value="IGLESIA">IGLESIA</option>
+            <option value="JACHAL">JÁCHAL</option>
+            <option value="9 DE JULIO">9 DE JULIO</option>
+            <option value="POCITO">POCITO</option>
+            <option value="RAWSON">RAWSON</option>
+            <option value="RIVADAVIA">RIVADAVIA</option>
+            <option value="SAN MARTIN">SAN MARTÍN</option>
+            <option value="SANTA LUCIA">SANTA LUCÍA</option>
+            <option value="SARMIENTO">SARMIENTO</option>
+            <option value="ULLUM">ULLUM</option>
+            <option value="VALLE FERTIL">VALLE FÉRTIL</option>
+            <option value="25 DE MAYO">25 DE MAYO</option>
+            <option value="ZONDA">ZONDA</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label"><strong>Tipo de Servidumbre</strong></label>
+          <select id="poligono_tipo_servidumbre" class="form-select">
+            <option value="">-- Seleccionar --</option>
+            <option value="CAMINO">Camino</option>
+            <option value="OCUPACIÓN">Ocupación</option>
+            <option value="CONDUCTOS">Conductos</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label"><strong>Objeto de la Servidumbre</strong></label>
+          <select id="poligono_objeto_servidumbre" class="form-select">
+            <option value="">-- Seleccionar --</option>
+            <option value="CAMINO">Camino</option>
+            <option value="CAMPAMENTO">Campamento</option>
+            <option value="DEPOSITO">Deposito</option>
+            <option value="POZOS">Pozos</option>
+            <option value="COMUNICACIÓN">Comunicación</option>
+            <option value="ELECTRODUCTO">Electroducto</option>
+            <option value="INSTALACIONES ELÉCTRICAS">Instalaciones Eléctricas</option>
+            <option value="ALMACÉN">Almacén</option>
+            <option value="ACUEDUCTO">Acueducto</option>
+            <option value="GASODUCTO">Gasoducto</option>
+            <option value="MINERALODUCTO">Mineraloducto</option>
+            <option value="SERVICIOS">Servicios</option>
+            <option value="PLANTA">Planta de Beneficio</option>
+            <option value="ESCOMBRERAS Y COLAS">Escombreras y Colas</option>
+            <option value="AERODROMO">Aerodromo</option>
+            <option value="OBRA">Obra</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Inputs de coordenadas -->
       <div class="row g-2 mb-2">
         <div class="col-md-4">
           <label class="form-label">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
@@ -308,10 +434,16 @@ let contadorEntidades = 1;
 // Variables para carga manual
 let lineaActual = {
   puntos: [],
-  ancho: 0
+  ancho: 0,
+  departamento: '',
+  tipo_servidumbre: '',
+  objeto_servidumbre: ''
 };
 let poligonoActual = {
-  puntos: []
+  puntos: [],
+  departamento: '',
+  tipo_servidumbre: '',
+  objeto_servidumbre: ''
 };
 
 // Definiciones de proyecciones
@@ -447,26 +579,49 @@ function finalizarLinea() {
     return;
   }
 
+  // Validar que se hayan seleccionado los atributos
+  const departamento = document.getElementById('linea_departamento').value;
+  const tipo_servidumbre = document.getElementById('linea_tipo_servidumbre').value;
+  const objeto_servidumbre = document.getElementById('linea_objeto_servidumbre').value;
+  const ancho = parseFloat(document.getElementById('linea_ancho').value) || 0;
+
+  if (!departamento || !tipo_servidumbre || !objeto_servidumbre) {
+    alert('Debe completar: Departamento, Tipo de Servidumbre y Objeto de Servidumbre antes de finalizar la línea');
+    return;
+  }
+
+  if (ancho <= 0) {
+    alert('Debe especificar un ancho mayor a 0 para la servidumbre');
+    return;
+  }
+
   // Agregar a lineasGeoJSON
   lineasGeoJSON.push({
     type: "Feature",
     geometry: { type: "LineString", coordinates: lineaActual.puntos },
     properties: { 
       id: contadorEntidades,
-      ancho: lineaActual.ancho,
+      ancho: ancho,
+      departamento: departamento,
+      tipo_servidumbre: tipo_servidumbre,
+      objeto_servidumbre: objeto_servidumbre,
       origen: 'manual'
     }
   });
 
   // Agregar formulario de atributos
-  agregarFormularioEntidad('Línea', contadorEntidades, lineaActual.ancho);
+  const longitud = lineaLongitudMetros(lineaActual.puntos);
+  agregarFormularioEntidad('Línea', contadorEntidades, ancho, null, departamento, tipo_servidumbre, objeto_servidumbre);
 
   contadorEntidades++;
-  lineaActual = { puntos: [], ancho: 0 };
+  lineaActual = { puntos: [], ancho: 0, departamento: '', tipo_servidumbre: '', objeto_servidumbre: '' };
   document.getElementById('puntos-linea-lista').innerHTML = '';
   document.getElementById('linea_x').value = '';
   document.getElementById('linea_y').value = '';
   document.getElementById('linea_ancho').value = '';
+  document.getElementById('linea_departamento').value = '';
+  document.getElementById('linea_tipo_servidumbre').value = '';
+  document.getElementById('linea_objeto_servidumbre').value = '';
 
   actualizarResumen();
   alert('✅ Línea agregada correctamente');
@@ -556,6 +711,16 @@ function finalizarPoligono() {
     return;
   }
 
+  // Validar que se hayan seleccionado los atributos
+  const departamento = document.getElementById('poligono_departamento').value;
+  const tipo_servidumbre = document.getElementById('poligono_tipo_servidumbre').value;
+  const objeto_servidumbre = document.getElementById('poligono_objeto_servidumbre').value;
+
+  if (!departamento || !tipo_servidumbre || !objeto_servidumbre) {
+    alert('Debe completar: Departamento, Tipo de Servidumbre y Objeto de Servidumbre antes de finalizar el polígono');
+    return;
+  }
+
   // Cerrar polígono
   const puntosCerrados = [...poligonoActual.puntos, poligonoActual.puntos[0]];
 
@@ -565,19 +730,25 @@ function finalizarPoligono() {
     geometry: { type: "Polygon", coordinates: [puntosCerrados] },
     properties: { 
       id: contadorEntidades,
+      departamento: departamento,
+      tipo_servidumbre: tipo_servidumbre,
+      objeto_servidumbre: objeto_servidumbre,
       origen: 'manual'
     }
   });
 
   // Agregar formulario de atributos
   const area = polygonAreaMeters2(poligonoActual.puntos);
-  agregarFormularioEntidad('Polígono', contadorEntidades, null, area);
+  agregarFormularioEntidad('Polígono', contadorEntidades, null, area, departamento, tipo_servidumbre, objeto_servidumbre);
 
   contadorEntidades++;
-  poligonoActual = { puntos: [] };
+  poligonoActual = { puntos: [], departamento: '', tipo_servidumbre: '', objeto_servidumbre: '' };
   document.getElementById('puntos-poligono-lista').innerHTML = '';
   document.getElementById('poligono_x').value = '';
   document.getElementById('poligono_y').value = '';
+  document.getElementById('poligono_departamento').value = '';
+  document.getElementById('poligono_tipo_servidumbre').value = '';
+  document.getElementById('poligono_objeto_servidumbre').value = '';
 
   actualizarResumen();
   alert('✅ Polígono agregado correctamente');
@@ -654,7 +825,7 @@ function actualizarResumen() {
   document.getElementById("dxf_poligonos").value = JSON.stringify(poligonosGeoJSON);
 }
 
-function agregarFormularioEntidad(tipo, id, ancho = null, area = null) {
+function agregarFormularioEntidad(tipo, id, ancho = null, area = null, departamento = '', tipo_servidumbre = '', objeto_servidumbre = '') {
   const containerTipos = document.getElementById("tiposPorEntidad");
   const div = document.createElement('div');
   div.classList.add('mb-2','border','p-2','rounded','bg-light');
@@ -666,57 +837,56 @@ function agregarFormularioEntidad(tipo, id, ancho = null, area = null) {
     Departamento:
     <select name="departamento_entidad[]" class="form-select" required>
       <option value="">-- DEPARTAMENTO --</option>
-      <option value="ALBARDON">ALBARDÓN</option>
-      <option value="ANGACO">ANGACO</option>
-      <option value="CALINGASTA">CALINGASTA</option>
-      <option value="CAPITAL">CAPITAL</option>
-      <option value="CAUCETE">CAUCETE</option>
-      <option value="CHIMBAS">CHIMBAS</option>
-      <option value="IGLESIA">IGLESIA</option>
-      <option value="JACHAL">JÁCHAL</option>
-      <option value="9 DE JULIO">9 DE JULIO</option>
-      <option value="POCITO">POCITO</option>
-      <option value="RAWSON">RAWSON</option>
-      <option value="RIVADAVIA">RIVADAVIA</option>
-      <option value="SAN MARTIN">SAN MARTÍN</option>
-      <option value="SANTA LUCIA">SANTA LUCÍA</option>
-      <option value="SARMIENTO">SARMIENTO</option>
-      <option value="ULLUM">ULLUM</option>
-      <option value="VALLE FERTIL">VALLE FÉRTIL</option>
-      <option value="25 DE MAYO">25 DE MAYO</option>
-      <option value="ZONDA">ZONDA</option>
+      <option value="ALBARDON" ${departamento === 'ALBARDON' ? 'selected' : ''}>ALBARDÓN</option>
+      <option value="ANGACO" ${departamento === 'ANGACO' ? 'selected' : ''}>ANGACO</option>
+      <option value="CALINGASTA" ${departamento === 'CALINGASTA' ? 'selected' : ''}>CALINGASTA</option>
+      <option value="CAPITAL" ${departamento === 'CAPITAL' ? 'selected' : ''}>CAPITAL</option>
+      <option value="CAUCETE" ${departamento === 'CAUCETE' ? 'selected' : ''}>CAUCETE</option>
+      <option value="CHIMBAS" ${departamento === 'CHIMBAS' ? 'selected' : ''}>CHIMBAS</option>
+      <option value="IGLESIA" ${departamento === 'IGLESIA' ? 'selected' : ''}>IGLESIA</option>
+      <option value="JACHAL" ${departamento === 'JACHAL' ? 'selected' : ''}>JÁCHAL</option>
+      <option value="9 DE JULIO" ${departamento === '9 DE JULIO' ? 'selected' : ''}>9 DE JULIO</option>
+      <option value="POCITO" ${departamento === 'POCITO' ? 'selected' : ''}>POCITO</option>
+      <option value="RAWSON" ${departamento === 'RAWSON' ? 'selected' : ''}>RAWSON</option>
+      <option value="RIVADAVIA" ${departamento === 'RIVADAVIA' ? 'selected' : ''}>RIVADAVIA</option>
+      <option value="SAN MARTIN" ${departamento === 'SAN MARTIN' ? 'selected' : ''}>SAN MARTÍN</option>
+      <option value="SANTA LUCIA" ${departamento === 'SANTA LUCIA' ? 'selected' : ''}>SANTA LUCÍA</option>
+      <option value="SARMIENTO" ${departamento === 'SARMIENTO' ? 'selected' : ''}>SARMIENTO</option>
+      <option value="ULLUM" ${departamento === 'ULLUM' ? 'selected' : ''}>ULLUM</option>
+      <option value="VALLE FERTIL" ${departamento === 'VALLE FERTIL' ? 'selected' : ''}>VALLE FÉRTIL</option>
+      <option value="25 DE MAYO" ${departamento === '25 DE MAYO' ? 'selected' : ''}>25 DE MAYO</option>
+      <option value="ZONDA" ${departamento === 'ZONDA' ? 'selected' : ''}>ZONDA</option>
     </select>
 
     Tipo de Servidumbre:
     <select name="tipo_servidumbre_entidad[]" class="form-select" required>
       <option value="">-- Seleccionar --</option>
-      <option value="CAMINO">Camino</option>
-      <option value="OCUPACIÓN">Ocupación</option>
-      <option value="CONDUCTOS">Conductos</option>
-      <option value="OTRO">Otro</option>
+      <option value="CAMINO" ${tipo_servidumbre === 'CAMINO' ? 'selected' : ''}>Camino</option>
+      <option value="OCUPACIÓN" ${tipo_servidumbre === 'OCUPACIÓN' ? 'selected' : ''}>Ocupación</option>
+      <option value="CONDUCTOS" ${tipo_servidumbre === 'CONDUCTOS' ? 'selected' : ''}>Conductos</option>
+      <option value="OTRO" ${tipo_servidumbre === 'OTRO' ? 'selected' : ''}>Otro</option>
     </select>
           
     Objeto de la Servidumbre:
     <select name="objeto_servidumbre_entidad[]" class="form-select" required>
       <option value="">-- Seleccionar --</option>
-      <option value="CAMINO">Camino</option>
-      <option value="CAMPAMENTO">Campamento</option>
-      <option value="DEPOSITO">Deposito</option>
-      <option value="POZOS">Pozos</option>
-      <option value="CAMPAMENTO">Campamento</option>
-      <option value="COMUNICACIÓN">Comunicación</option>
-      <option value="ELECTRODUCTO">Electroducto</option>
-      <option value="INSTALACIONES ELÉCTRICAS">Instalaciones Eléctricas</option>
-      <option value="ALMACÉN">Almacén</option>
-      <option value="ACUEDUCTO">Acueducto</option>
-      <option value="GASODUCTO">Gasoducto</option>
-      <option value="MINERALODUCTO">Mineraloducto</option>
-      <option value="SERVICIOS">Servicios</option>
-      <option value="PLANTA">Planta de Beneficio</option>
-      <option value="ESCOMBRERAS Y COLAS">Escombreras y Colas</option>
-      <option value="AERODROMO">Aerodromo</option>
-      <option value="OBRA">Obra</option>
-      <option value="OTRO">Otro</option>
+      <option value="CAMINO" ${objeto_servidumbre === 'CAMINO' ? 'selected' : ''}>Camino</option>
+      <option value="CAMPAMENTO" ${objeto_servidumbre === 'CAMPAMENTO' ? 'selected' : ''}>Campamento</option>
+      <option value="DEPOSITO" ${objeto_servidumbre === 'DEPOSITO' ? 'selected' : ''}>Deposito</option>
+      <option value="POZOS" ${objeto_servidumbre === 'POZOS' ? 'selected' : ''}>Pozos</option>
+      <option value="COMUNICACIÓN" ${objeto_servidumbre === 'COMUNICACIÓN' ? 'selected' : ''}>Comunicación</option>
+      <option value="ELECTRODUCTO" ${objeto_servidumbre === 'ELECTRODUCTO' ? 'selected' : ''}>Electroducto</option>
+      <option value="INSTALACIONES ELÉCTRICAS" ${objeto_servidumbre === 'INSTALACIONES ELÉCTRICAS' ? 'selected' : ''}>Instalaciones Eléctricas</option>
+      <option value="ALMACÉN" ${objeto_servidumbre === 'ALMACÉN' ? 'selected' : ''}>Almacén</option>
+      <option value="ACUEDUCTO" ${objeto_servidumbre === 'ACUEDUCTO' ? 'selected' : ''}>Acueducto</option>
+      <option value="GASODUCTO" ${objeto_servidumbre === 'GASODUCTO' ? 'selected' : ''}>Gasoducto</option>
+      <option value="MINERALODUCTO" ${objeto_servidumbre === 'MINERALODUCTO' ? 'selected' : ''}>Mineraloducto</option>
+      <option value="SERVICIOS" ${objeto_servidumbre === 'SERVICIOS' ? 'selected' : ''}>Servicios</option>
+      <option value="PLANTA" ${objeto_servidumbre === 'PLANTA' ? 'selected' : ''}>Planta de Beneficio</option>
+      <option value="ESCOMBRERAS Y COLAS" ${objeto_servidumbre === 'ESCOMBRERAS Y COLAS' ? 'selected' : ''}>Escombreras y Colas</option>
+      <option value="AERODROMO" ${objeto_servidumbre === 'AERODROMO' ? 'selected' : ''}>Aerodromo</option>
+      <option value="OBRA" ${objeto_servidumbre === 'OBRA' ? 'selected' : ''}>Obra</option>
+      <option value="OTRO" ${objeto_servidumbre === 'OTRO' ? 'selected' : ''}>Otro</option>
     </select>
   `;
 
