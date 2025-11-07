@@ -154,8 +154,10 @@ if (!isset($_SESSION['usuario'])) {
         </div>
       </div>
       <div class="alert alert-info mt-3 mb-0" role="alert">
+        <strong>Importante:</strong> Un expediente puede tener múltiples servidumbres (líneas y/o polígonos).<br>
         <strong>Lineal:</strong> Para caminos, electroductos, gasoductos, etc. (requiere ancho)<br>
-        <strong>Superficie:</strong> Para campamentos, depósitos, plantas, etc. (área poligonal)
+        <strong>Superficie:</strong> Para campamentos, depósitos, plantas, etc. (área poligonal)<br>
+        <small class="text-muted">El departamento seleccionado arriba se usará como predeterminado, pero puede cambiarse en cada servidumbre si es necesario.</small>
       </div>
     </div>
   </div>
@@ -168,11 +170,36 @@ if (!isset($_SESSION['usuario'])) {
     <div class="card-body">
       <!-- Selectores de tipo -->
       <div class="row g-2 mb-3 bg-light p-2 rounded">
-        <div class="col-md-4">
+        <div class="col-md-6">
+          <label class="form-label"><strong>Departamento</strong></label>
+          <select id="linea_departamento" class="form-select">
+            <option value="">-- DEPARTAMENTO --</option>
+            <option value="ALBARDON">ALBARDÓN</option>
+            <option value="ANGACO">ANGACO</option>
+            <option value="CALINGASTA">CALINGASTA</option>
+            <option value="CAPITAL">CAPITAL</option>
+            <option value="CAUCETE">CAUCETE</option>
+            <option value="CHIMBAS">CHIMBAS</option>
+            <option value="IGLESIA">IGLESIA</option>
+            <option value="JACHAL">JÁCHAL</option>
+            <option value="9 DE JULIO">9 DE JULIO</option>
+            <option value="POCITO">POCITO</option>
+            <option value="RAWSON">RAWSON</option>
+            <option value="RIVADAVIA">RIVADAVIA</option>
+            <option value="SAN MARTIN">SAN MARTÍN</option>
+            <option value="SANTA LUCIA">SANTA LUCÍA</option>
+            <option value="SARMIENTO">SARMIENTO</option>
+            <option value="ULLUM">ULLUM</option>
+            <option value="VALLE FERTIL">VALLE FÉRTIL</option>
+            <option value="25 DE MAYO">25 DE MAYO</option>
+            <option value="ZONDA">ZONDA</option>
+          </select>
+        </div>
+        <div class="col-md-6">
           <label class="form-label"><strong>Ancho de la servidumbre (m)</strong></label>
           <input type="number" id="linea_ancho" class="form-control" step="0.01" min="0" placeholder="0.00">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label"><strong>Tipo de Servidumbre</strong></label>
           <select id="linea_tipo_servidumbre" class="form-select">
             <option value="">-- Seleccionar --</option>
@@ -182,7 +209,7 @@ if (!isset($_SESSION['usuario'])) {
             <option value="OTRO">Otro</option>
           </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label"><strong>Objeto de la Servidumbre</strong></label>
           <select id="linea_objeto_servidumbre" class="form-select">
             <option value="">-- Seleccionar --</option>
@@ -238,7 +265,32 @@ if (!isset($_SESSION['usuario'])) {
     <div class="card-body">
       <!-- Selectores de tipo -->
       <div class="row g-2 mb-3 bg-light p-2 rounded">
-        <div class="col-md-6">
+        <div class="col-md-4">
+          <label class="form-label"><strong>Departamento</strong></label>
+          <select id="poligono_departamento" class="form-select">
+            <option value="">-- DEPARTAMENTO --</option>
+            <option value="ALBARDON">ALBARDÓN</option>
+            <option value="ANGACO">ANGACO</option>
+            <option value="CALINGASTA">CALINGASTA</option>
+            <option value="CAPITAL">CAPITAL</option>
+            <option value="CAUCETE">CAUCETE</option>
+            <option value="CHIMBAS">CHIMBAS</option>
+            <option value="IGLESIA">IGLESIA</option>
+            <option value="JACHAL">JÁCHAL</option>
+            <option value="9 DE JULIO">9 DE JULIO</option>
+            <option value="POCITO">POCITO</option>
+            <option value="RAWSON">RAWSON</option>
+            <option value="RIVADAVIA">RIVADAVIA</option>
+            <option value="SAN MARTIN">SAN MARTÍN</option>
+            <option value="SANTA LUCIA">SANTA LUCÍA</option>
+            <option value="SARMIENTO">SARMIENTO</option>
+            <option value="ULLUM">ULLUM</option>
+            <option value="VALLE FERTIL">VALLE FÉRTIL</option>
+            <option value="25 DE MAYO">25 DE MAYO</option>
+            <option value="ZONDA">ZONDA</option>
+          </select>
+        </div>
+        <div class="col-md-4">
           <label class="form-label"><strong>Tipo de Servidumbre</strong></label>
           <select id="poligono_tipo_servidumbre" class="form-select">
             <option value="">-- Seleccionar --</option>
@@ -248,7 +300,7 @@ if (!isset($_SESSION['usuario'])) {
             <option value="OTRO">Otro</option>
           </select>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label"><strong>Objeto de la Servidumbre</strong></label>
           <select id="poligono_objeto_servidumbre" class="form-select">
             <option value="">-- Seleccionar --</option>
@@ -495,16 +547,23 @@ function cambiarTipoGeometria() {
   const tipo = document.getElementById('selector_tipo_geometria').value;
   const cardLinea = document.getElementById('card_linea');
   const cardPoligono = document.getElementById('card_poligono');
+  const deptGeneral = document.getElementById('departamento_general').value;
   
   // Ocultar ambas tarjetas
   cardLinea.style.display = 'none';
   cardPoligono.style.display = 'none';
   
-  // Mostrar la seleccionada
+  // Mostrar la seleccionada y auto-poblar departamento desde el selector general
   if (tipo === 'linea') {
     cardLinea.style.display = 'block';
+    if (deptGeneral) {
+      document.getElementById('linea_departamento').value = deptGeneral;
+    }
   } else if (tipo === 'poligono') {
     cardPoligono.style.display = 'block';
+    if (deptGeneral) {
+      document.getElementById('poligono_departamento').value = deptGeneral;
+    }
   }
 }
 
@@ -596,7 +655,7 @@ function finalizarLinea() {
   }
 
   // Validar que se hayan seleccionado los atributos
-  const departamento = document.getElementById('departamento_general').value;
+  const departamento = document.getElementById('linea_departamento').value;
   const tipo_servidumbre = document.getElementById('linea_tipo_servidumbre').value;
   const objeto_servidumbre = document.getElementById('linea_objeto_servidumbre').value;
   const ancho = parseFloat(document.getElementById('linea_ancho').value) || 0;
@@ -635,6 +694,7 @@ function finalizarLinea() {
   document.getElementById('linea_x').value = '';
   document.getElementById('linea_y').value = '';
   document.getElementById('linea_ancho').value = '';
+  document.getElementById('linea_departamento').value = '';
   document.getElementById('linea_tipo_servidumbre').value = '';
   document.getElementById('linea_objeto_servidumbre').value = '';
 
@@ -727,7 +787,7 @@ function finalizarPoligono() {
   }
 
   // Validar que se hayan seleccionado los atributos
-  const departamento = document.getElementById('departamento_general').value;
+  const departamento = document.getElementById('poligono_departamento').value;
   const tipo_servidumbre = document.getElementById('poligono_tipo_servidumbre').value;
   const objeto_servidumbre = document.getElementById('poligono_objeto_servidumbre').value;
 
@@ -761,6 +821,7 @@ function finalizarPoligono() {
   document.getElementById('puntos-poligono-lista').innerHTML = '';
   document.getElementById('poligono_x').value = '';
   document.getElementById('poligono_y').value = '';
+  document.getElementById('poligono_departamento').value = '';
   document.getElementById('poligono_tipo_servidumbre').value = '';
   document.getElementById('poligono_objeto_servidumbre').value = '';
 
