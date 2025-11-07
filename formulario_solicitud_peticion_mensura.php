@@ -1147,19 +1147,43 @@ function importarDesdeCSV(){
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).filter(l=>l.trim()!=="");
     let tempPol = {};
-    lines.forEach(line => {
+    let errores = [];
+    
+    lines.forEach((line, lineNum) => {
       const parts = line.split(";");
-      if(parts.length < 5) return; // ahora tenemos id_poligono; id_pertenencia; id_vertice; este; norte
+      if(parts.length < 5) return; // formato: id_poligono; id_pertenencia; id_vertice; este; norte
+      
       const id_sol = parts[0].trim(); 
       const id_pert = parts[1].trim();
       const id_v = parts[2].trim();
-      const x = parseFloat(parts[3].replace(",","."));
-      const y = parseFloat(parts[4].replace(",","."));
-      if(isNaN(x)||isNaN(y)) return;
+      
+      // Formato CSV: columna 3=ESTE, columna 4=NORTE
+      // Nuestro código: p.x=NORTE (6M), p.y=ESTE (2M)
+      const este = parseFloat(parts[3].replace(",","."));
+      const norte = parseFloat(parts[4].replace(",","."));
+      
+      if(isNaN(este)||isNaN(norte)) return;
+      
+      // Validar rangos POSGAR 2007 San Juan
+      if (este < 2000000 || este >= 3000000) {
+        errores.push(`Línea ${lineNum+1}: X (ESTE)=${este} fuera de rango (debe comenzar con 2)`);
+        return;
+      }
+      if (norte < 6000000 || norte >= 7000000) {
+        errores.push(`Línea ${lineNum+1}: Y (NORTE)=${norte} fuera de rango (debe comenzar con 6)`);
+        return;
+      }
+      
+      const x = norte; // x = NORTE
+      const y = este;  // y = ESTE
 
-          if(!tempPol[id_pert]) tempPol[id_pert] = { id_p: id_pert, id_sol: id_sol, vertices: [] };
+      if(!tempPol[id_pert]) tempPol[id_pert] = { id_p: id_pert, id_sol: id_sol, vertices: [] };
       tempPol[id_pert].vertices.push({id_v, x, y});
     });
+
+    if(errores.length > 0) {
+      alert("⚠️ ERRORES EN CSV:\n\n" + errores.join("\n") + "\n\nLos puntos con errores fueron omitidos.");
+    }
 
     multipoligonos = Object.values(tempPol);
 
@@ -1174,22 +1198,58 @@ function importarSolicitudMensura(){
   const input=document.getElementById("csvSolicitudMensura");
   const file=input.files[0];
   if(!file){alert("Seleccione un archivo CSV"); return;}
+  
   const reader=new FileReader();
   reader.onload=e=>{
     const lines=e.target.result.split(/\r?\n/).filter(l=>l.trim()!=="");
     const tempPol={};
-    lines.forEach(line=>{
+    let errores = [];
+    
+    lines.forEach((line, lineNum)=>{
       const parts=line.split(";");
-      if(parts.length<4) return;
-      const id_mensura=parts[0].trim(), id_v=parts[1].trim();
-      const x=parseFloat(parts[2].replace(",",".")), y=parseFloat(parts[3].replace(",",".")); 
-      if(isNaN(x)||isNaN(y)) return;
+      if(parts.length<4) return; // formato: id_mensura;id_vertice;este;norte
+      
+      const id_mensura=parts[0].trim();
+      const id_v=parts[1].trim();
+      
+      // Formato CSV: columna 2=ESTE, columna 3=NORTE
+      // Nuestro código: p.x=NORTE (6M), p.y=ESTE (2M)
+      const este=parseFloat(parts[2].replace(",","."));
+      const norte=parseFloat(parts[3].replace(",",".")); 
+      
+      if(isNaN(este)||isNaN(norte)) return;
+
+      // Validar rangos POSGAR 2007 San Juan
+      if (este < 2000000 || este >= 3000000) {
+        errores.push(`Línea ${lineNum+1}: X (ESTE)=${este} fuera de rango (debe comenzar con 2)`);
+        return;
+      }
+      if (norte < 6000000 || norte >= 7000000) {
+        errores.push(`Línea ${lineNum+1}: Y (NORTE)=${norte} fuera de rango (debe comenzar con 6)`);
+        return;
+      }
+      
+      const x = norte; // x = NORTE
+      const y = este;  // y = ESTE
 
       if(!tempPol[id_mensura]) tempPol[id_mensura] = { id_mensura, vertices: [], sup_decl: 0, sup_graf_ha: 0 };
       tempPol[id_mensura].vertices.push({id_v, x, y});
     });
 
+    if(errores.length > 0) {
+      alert("⚠️ ERRORES EN CSV:\n\n" + errores.join("\n") + "\n\nLos puntos con errores fueron omitidos.");
+    }
+
     solicitudesMensura = Object.values(tempPol);
+    
+    // Validar secuencia de cada polígono importado
+    solicitudesMensura.forEach(pol => {
+      const resultado = validarSecuenciaPoligono(pol.vertices, `Perímetro ${pol.id_mensura}`);
+      if (resultado.errores.length > 0) {
+        alert(`⚠️ ADVERTENCIAS para ${resultado.nombre}:\n\n` + resultado.errores.join('\n'));
+      }
+    });
+    
     document.getElementById("solicitudes_mensura").value = JSON.stringify(solicitudesMensura);
     dibujarSolicitudes();
   };
