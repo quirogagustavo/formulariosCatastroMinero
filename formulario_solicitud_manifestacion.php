@@ -261,11 +261,11 @@ if (!isset($_SESSION['usuario'])) {
   <div class="row mb-3">
     <div class="col-md-6">
       <label class="form-label fw-bold">Sistema de Coordenadas</label>
-      <select id="sistema-coordenadas" class="form-select" onchange="actualizarEtiquetasCoordenadas()">
-        <option value="posgar2007" selected>POSGAR 2007 (EPSG:5344) - Por defecto</option>
-        <option value="posgar94">POSGAR 94 (EPSG:22182) - Se transformará a POSGAR 2007</option>
+      <select id="sistema-coordenadas" class="form-select" onchange="actualizarPlaceholdersManifestacion(); actualizarEtiquetasCoordenadas();">
+        <option value="posgar2007" selected>POSGAR 2007 (EPSG:5344) - Recomendado</option>
+        <option value="posgar94">POSGAR 94 (EPSG:22182) - Se convertirá automáticamente</option>
       </select>
-      <small class="text-muted">Seleccione el sistema en el que ingresará las coordenadas</small>
+      <small class="text-muted">Si sus coordenadas están en POSGAR 94, se convertirán automáticamente a POSGAR 2007 usando los parámetros oficiales del IGN.</small>
     </div>
   </div>
   
@@ -289,14 +289,12 @@ if (!isset($_SESSION['usuario'])) {
     
     <legend class="h5">LUGAR DE EXTRACCIÓN MUESTRA</legend>
     <div class="col-md-4">
-      <label class="form-label fw-bold">X (ESTE)</label>
-      <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" min="0" placeholder="0.00">
-      <small class="text-muted">Debe comenzar con 2</small>
+      <label class="form-label fw-bold">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+      <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
     </div>
     <div class="col-md-4">
-      <label class="form-label fw-bold">Y (NORTE)</label>
-      <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" min="0" placeholder="0.00">
-      <small class="text-muted">Debe comenzar con 6</small>
+      <label class="form-label fw-bold">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+      <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -312,14 +310,12 @@ if (!isset($_SESSION['usuario'])) {
     
     <legend class="h5">AREA DE RECONOCIMIENTO</legend>
     <div class="col-md-4">
-      <label class="form-label fw-bold">X (ESTE)</label>
-      <input type="number" id="x" class="form-control" required step="0.01" min="0" placeholder="0.00">
-      <small class="text-muted">Debe comenzar con 2</small>
+      <label class="form-label fw-bold">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+      <input type="number" id="x" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
     </div>
     <div class="col-md-4">
-      <label class="form-label fw-bold">Y (NORTE)</label>
-      <input type="number" id="y" class="form-control" required step="0.01" min="0" placeholder="0.00">
-      <small class="text-muted">Debe comenzar con 6</small>
+      <label class="form-label fw-bold">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+      <input type="number" id="y" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -420,8 +416,16 @@ if (!isset($_SESSION['usuario'])) {
     let poligonoLayer;
     let marcadorUnico = null;
 
-
+    // Definiciones de sistemas de coordenadas
+    // POSGAR 94 (EPSG:22182)
     proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
+    
+    // POSGAR 2007 (EPSG:5344) - Faja 2
+    proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+    
+    // POSGAR 94 personalizado con parámetros IGN para transformación a WGS84
+    proj4.defs("EPSG:922182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
     {
@@ -431,34 +435,102 @@ if (!isset($_SESSION['usuario'])) {
     );
 
     const fromProjection = proj4("EPSG:22182");
-    const toProjection = proj4("WGS84");   
+    const toProjection = proj4("WGS84");
+    
+    /**
+     * Convierte coordenadas de POSGAR 94 a POSGAR 2007 usando parámetros oficiales del IGN
+     */
+    function convertirPOSGAR94aPOSGAR2007(este94, norte94) {
+      // 1. POSGAR 94 con parámetros IGN -> WGS84
+      const [lon, lat] = proj4('EPSG:922182', 'WGS84', [este94, norte94]);
+      
+      // 2. WGS84 -> POSGAR 2007
+      const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
+      
+      return { este: este07, norte: norte07 };
+    }
+    
+    /**
+     * Actualiza los placeholders según el sistema de coordenadas seleccionado
+     */
+    function actualizarPlaceholdersManifestacion() {
+      const sistema = document.getElementById('sistema-coordenadas').value;
+      const inputMuestraX = document.getElementById('muestra_x');
+      const inputMuestraY = document.getElementById('muestra_y');
+      const inputX = document.getElementById('x');
+      const inputY = document.getElementById('y');
+      
+      if (sistema === 'posgar2007') {
+        // POSGAR 2007
+        inputMuestraX.placeholder = 'Ejemplo: 6677723.20';
+        inputMuestraY.placeholder = 'Ejemplo: 2492370.69';
+        inputX.placeholder = 'Ejemplo: 6677723.20';
+        inputY.placeholder = 'Ejemplo: 2492370.69';
+      } else {
+        // POSGAR 94
+        inputMuestraX.placeholder = 'Ejemplo: 6677729.89';
+        inputMuestraY.placeholder = 'Ejemplo: 2492382.03';
+        inputX.placeholder = 'Ejemplo: 6677729.89';
+        inputY.placeholder = 'Ejemplo: 2492382.03';
+      }
+    }
 
   function agregarPuntoUnico() {
   const imuestra_x = document.getElementById("muestra_x");
   const imuestra_y = document.getElementById("muestra_y");
-  const muestra_x = parseFloat(imuestra_x.value);
-  const muestra_y = parseFloat(imuestra_y.value);
+  let muestra_x = parseFloat(imuestra_x.value);
+  let muestra_y = parseFloat(imuestra_y.value);
   
   if (isNaN(muestra_x) || isNaN(muestra_y)) {
-    alert("Por favor ingresa valores válidos para ESTE y NORTE en lugar de extracción de muestra");
+    alert("Por favor ingresa valores válidos para X (ESTE) e Y (NORTE)");
     return;
   }
 
-  // Validar que X (ESTE) comience con 2 (rango 2000000-2999999)
-  if (muestra_y < 2000000 || muestra_y >= 3000000) {
-    alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
-    imuestra_y.focus();
-    return;
+  const sistema = document.getElementById('sistema-coordenadas').value;
+  
+  // Validar rangos según el sistema de coordenadas
+  if (sistema === 'posgar2007') {
+    // POSGAR 2007: Y (ESTE) debe comenzar con 2, X (NORTE) con 6
+    if (muestra_y < 2000000 || muestra_y >= 3000000) {
+      alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+      imuestra_y.focus();
+      return;
+    }
+    if (muestra_x < 6000000 || muestra_x >= 7000000) {
+      alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+      imuestra_x.focus();
+      return;
+    }
+  } else {
+    // POSGAR 94: rangos similares pero se convertirán
+    if (muestra_y < 2000000 || muestra_y >= 3000000) {
+      alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
+      imuestra_y.focus();
+      return;
+    }
+    if (muestra_x < 6000000 || muestra_x >= 7000000) {
+      alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
+      imuestra_x.focus();
+      return;
+    }
+    
+    // Convertir de POSGAR 94 a POSGAR 2007
+    const convertido = convertirPOSGAR94aPOSGAR2007(muestra_y, muestra_x);
+    console.log(`Conversión POSGAR 94 -> 2007: (${muestra_y}, ${muestra_x}) -> (${convertido.este.toFixed(2)}, ${convertido.norte.toFixed(2)})`);
+    
+    // Actualizar valores a POSGAR 2007
+    muestra_y = convertido.este;
+    muestra_x = convertido.norte;
+    
+    // Mostrar mensaje informativo
+    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
+          `ESTE: ${muestra_y.toFixed(2)}\n` +
+          `NORTE: ${muestra_x.toFixed(2)}\n\n` +
+          `Las coordenadas se guardarán en POSGAR 2007.`);
   }
 
-  // Validar que Y (NORTE) comience con 6 (rango 6000000-6999999)
-  if (muestra_x < 6000000 || muestra_x >= 7000000) {
-    alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
-    imuestra_x.focus();
-    return;
-  }
-
-  const [lon, lat] = proj4(fromProjection, toProjection, [muestra_y, muestra_x]);
+  // Usar POSGAR 2007 para visualización
+  const [lon, lat] = proj4('EPSG:5344', 'WGS84', [muestra_y, muestra_x]);
 
   // Si ya hay un marcador anterior, eliminarlo
   if (marcadorUnico) {
@@ -466,10 +538,10 @@ if (!isset($_SESSION['usuario'])) {
   }
 
   marcadorUnico = L.marker([lat, lon]).addTo(map)
-    .bindPopup(`ESTE: ${muestra_x}, NORTE: ${muestra_y}`)
+    .bindPopup(`ESTE: ${muestra_y.toFixed(2)}, NORTE: ${muestra_x.toFixed(2)}`)
     .openPopup();
-
   
+  map.setView([lat, lon], 13);
 }
 
 function eliminarUltimoPuntoUnico(event) {
@@ -477,34 +549,63 @@ function eliminarUltimoPuntoUnico(event) {
   if (marcadorUnico) {
     map.removeLayer(marcadorUnico);
     marcadorUnico = null;
-    document.getElementById("muestra_x").value = '0.00';
-    document.getElementById("muestra_y").value = '0.00';
+    document.getElementById("muestra_x").value = '';
+    document.getElementById("muestra_y").value = '';
   }
 }
 
     function agregarPunto() {
       const ix = document.getElementById("x");
       const iy = document.getElementById("y");
-      const x = parseFloat(ix.value);
-      const y = parseFloat(iy.value);
+      let x = parseFloat(ix.value);
+      let y = parseFloat(iy.value);
       
       if (isNaN(x) || isNaN(y)) {
-        alert("Por favor ingresa valores válidos para ESTE y NORTE");
+        alert("Por favor ingresa valores válidos para X (ESTE) e Y (NORTE)");
         return;
       }
 
-      // Validar que X (ESTE) comience con 2 (rango 2000000-2999999)
-      if (y < 2000000 || y >= 3000000) {
-        alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
-        iy.focus();
-        return;
-      }
-
-      // Validar que Y (NORTE) comience con 6 (rango 6000000-6999999)
-      if (x < 6000000 || x >= 7000000) {
-        alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
-        ix.focus();
-        return;
+      const sistema = document.getElementById('sistema-coordenadas').value;
+      
+      // Validar rangos según el sistema de coordenadas  
+      if (sistema === 'posgar2007') {
+        // POSGAR 2007: Y (ESTE) debe comenzar con 2, X (NORTE) con 6
+        if (y < 2000000 || y >= 3000000) {
+          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+          iy.focus();
+          return;
+        }
+        if (x < 6000000 || x >= 7000000) {
+          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+          ix.focus();
+          return;
+        }
+      } else {
+        // POSGAR 94: rangos similares pero se convertirán
+        if (y < 2000000 || y >= 3000000) {
+          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
+          iy.focus();
+          return;
+        }
+        if (x < 6000000 || x >= 7000000) {
+          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
+          ix.focus();
+          return;
+        }
+        
+        // Convertir de POSGAR 94 a POSGAR 2007
+        const convertido = convertirPOSGAR94aPOSGAR2007(y, x);
+        console.log(`Conversión POSGAR 94 -> 2007: (${y}, ${x}) -> (${convertido.este.toFixed(2)}, ${convertido.norte.toFixed(2)})`);
+        
+        // Actualizar valores a POSGAR 2007
+        y = convertido.este;
+        x = convertido.norte;
+        
+        // Mostrar mensaje informativo
+        alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
+              `ESTE: ${y.toFixed(2)}\n` +
+              `NORTE: ${x.toFixed(2)}\n\n` +
+              `Las coordenadas se guardarán en POSGAR 2007.`);
       }
 
       // Validar el punto con el nuevo sistema
@@ -514,8 +615,8 @@ function eliminarUltimoPuntoUnico(event) {
           puntos.push({x, y, z: 0, color: color, estado: estado});
           actualizarListaPuntos();
           dibujarPoligono();
-          document.getElementById("x").value = '0.00';
-          document.getElementById("y").value = '0.00';
+          document.getElementById("x").value = '';
+          document.getElementById("y").value = '';
         } else {
           // Punto inválido - no agregar
           alert("⚠️ ADVERTENCIA: El punto ingresado está muy alejado del límite provincial.\n\nNo se puede agregar este punto. Máximo permitido: 100km fuera del límite provincial.");
