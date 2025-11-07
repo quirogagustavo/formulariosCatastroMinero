@@ -112,8 +112,31 @@ if (!isset($_SESSION['usuario'])) {
 <div class="container">
   <h3>Opción 1: Registro Manual de Coordenadas</h3>
   
+  <!-- Selector de tipo de geometría -->
+  <div class="card mb-3 border-primary">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Tipo de Servidumbre a Registrar</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-12">
+          <label class="form-label"><strong>Seleccione el tipo de geometría que desea registrar:</strong></label>
+          <select id="selector_tipo_geometria" class="form-select form-select-lg" onchange="cambiarTipoGeometria()">
+            <option value="">-- Seleccione el tipo de servidumbre --</option>
+            <option value="linea">Servidumbre Lineal (con ancho)</option>
+            <option value="poligono">Servidumbre de Superficie (polígono)</option>
+          </select>
+        </div>
+      </div>
+      <div class="alert alert-info mt-3 mb-0" role="alert">
+        <strong>Lineal:</strong> Para caminos, electroductos, gasoductos, etc. (requiere ancho)<br>
+        <strong>Superficie:</strong> Para campamentos, depósitos, plantas, etc. (área poligonal)
+      </div>
+    </div>
+  </div>
+  
   <!-- Agregar Líneas -->
-  <div class="card mb-3">
+  <div id="card_linea" class="card mb-3" style="display: none;">
     <div class="card-header bg-danger text-white">
       <h5 class="mb-0">Agregar Línea (Servidumbre Lineal)</h5>
     </div>
@@ -208,7 +231,7 @@ if (!isset($_SESSION['usuario'])) {
   </div>
 
   <!-- Agregar Polígonos -->
-  <div class="card mb-3">
+  <div id="card_poligono" class="card mb-3" style="display: none;">
     <div class="card-header bg-success text-white">
       <h5 class="mb-0">Agregar Polígono (Servidumbre de Superficie)</h5>
     </div>
@@ -490,6 +513,24 @@ function actualizarPlaceholdersServidumbre() {
       elem.placeholder = input.norte ? 'Ejemplo: 6677729.89' : 'Ejemplo: 2492382.03';
     }
   });
+}
+
+// Función para cambiar tipo de geometría
+function cambiarTipoGeometria() {
+  const tipo = document.getElementById('selector_tipo_geometria').value;
+  const cardLinea = document.getElementById('card_linea');
+  const cardPoligono = document.getElementById('card_poligono');
+  
+  // Ocultar ambas tarjetas
+  cardLinea.style.display = 'none';
+  cardPoligono.style.display = 'none';
+  
+  // Mostrar la seleccionada
+  if (tipo === 'linea') {
+    cardLinea.style.display = 'block';
+  } else if (tipo === 'poligono') {
+    cardPoligono.style.display = 'block';
+  }
 }
 
 // Agregar punto a línea
