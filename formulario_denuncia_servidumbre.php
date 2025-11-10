@@ -263,6 +263,7 @@ if (!isset($_SESSION['usuario'])) {
                 <th style="width: 60px;">Vértice</th>
                 <th>ESTE (X)</th>
                 <th>NORTE (Y)</th>
+                <th style="width: 80px;" class="text-center">Acción</th>
               </tr>
             </thead>
             <tbody id="tabla-puntos-linea-body">
@@ -370,6 +371,7 @@ if (!isset($_SESSION['usuario'])) {
                 <th style="width: 60px;">Vértice</th>
                 <th>ESTE (X)</th>
                 <th>NORTE (Y)</th>
+                <th style="width: 80px;" class="text-center">Acción</th>
               </tr>
             </thead>
             <tbody id="tabla-puntos-poligono-body">
@@ -676,7 +678,7 @@ function actualizarTablaPuntosLinea() {
   const rowAncho = document.createElement('tr');
   rowAncho.className = 'table-info';
   rowAncho.innerHTML = `
-    <td colspan="3" class="text-center"><strong>Ancho de servidumbre: ${ancho.toFixed(2)} m</strong> | <strong>Puntos: ${lineaActual.puntos.length}</strong></td>
+    <td colspan="4" class="text-center"><strong>Ancho de servidumbre: ${ancho.toFixed(2)} m</strong> | <strong>Puntos: ${lineaActual.puntos.length}</strong></td>
   `;
   tbody.appendChild(rowAncho);
   
@@ -687,9 +689,32 @@ function actualizarTablaPuntosLinea() {
       <td class="text-center"><strong>V${i + 1}</strong></td>
       <td>${p[0].toFixed(2)}</td>
       <td>${p[1].toFixed(2)}</td>
+      <td class="text-center">
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoLinea(${i})" title="Eliminar este punto">
+          🗑️
+        </button>
+      </td>
     `;
     tbody.appendChild(row);
   });
+}
+
+function eliminarPuntoLinea(index) {
+  if (index < 0 || index >= lineaActual.puntos.length) {
+    return;
+  }
+  
+  // Confirmar eliminación
+  if (confirm(`¿Eliminar el vértice V${index + 1}?`)) {
+    lineaActual.puntos.splice(index, 1);
+    
+    // Redibujar mapa
+    capaDXF.clearLayers();
+    redibujarTodasGeometrias();
+    
+    // Actualizar tabla
+    actualizarTablaPuntosLinea();
+  }
 }
 
 function eliminarUltimoPuntoLinea() {
@@ -840,7 +865,7 @@ function actualizarTablaPuntosPoligono() {
   const rowInfo = document.createElement('tr');
   rowInfo.className = 'table-success';
   rowInfo.innerHTML = `
-    <td colspan="3" class="text-center"><strong>Puntos agregados: ${poligonoActual.puntos.length}</strong></td>
+    <td colspan="4" class="text-center"><strong>Puntos agregados: ${poligonoActual.puntos.length}</strong></td>
   `;
   tbody.appendChild(rowInfo);
   
@@ -851,9 +876,32 @@ function actualizarTablaPuntosPoligono() {
       <td class="text-center"><strong>V${i + 1}</strong></td>
       <td>${p[0].toFixed(2)}</td>
       <td>${p[1].toFixed(2)}</td>
+      <td class="text-center">
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPoligono(${i})" title="Eliminar este punto">
+          🗑️
+        </button>
+      </td>
     `;
     tbody.appendChild(row);
   });
+}
+
+function eliminarPuntoPoligono(index) {
+  if (index < 0 || index >= poligonoActual.puntos.length) {
+    return;
+  }
+  
+  // Confirmar eliminación
+  if (confirm(`¿Eliminar el vértice V${index + 1}?`)) {
+    poligonoActual.puntos.splice(index, 1);
+    
+    // Redibujar mapa
+    capaDXF.clearLayers();
+    redibujarTodasGeometrias();
+    
+    // Actualizar tabla
+    actualizarTablaPuntosPoligono();
+  }
 }
 
 function eliminarUltimoPuntoPoligono() {
