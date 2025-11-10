@@ -253,7 +253,23 @@ if (!isset($_SESSION['usuario'])) {
         <button type="button" class="btn btn-secondary btn-sm" onclick="eliminarUltimoPuntoLinea()">🗑️ Eliminar último punto</button>
         <button type="button" class="btn btn-success btn-sm" onclick="finalizarLinea()">✅ Finalizar Línea</button>
       </div>
-      <div id="puntos-linea-lista" class="small"></div>
+      
+      <!-- Tabla de puntos agregados -->
+      <div id="puntos-linea-lista" class="mt-3">
+        <div class="table-responsive" id="tabla-puntos-linea-container" style="display: none;">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 60px;">Vértice</th>
+                <th>ESTE (X)</th>
+                <th>NORTE (Y)</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-puntos-linea-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -344,7 +360,23 @@ if (!isset($_SESSION['usuario'])) {
         <button type="button" class="btn btn-secondary btn-sm" onclick="eliminarUltimoPuntoPoligono()">🗑️ Eliminar último punto</button>
         <button type="button" class="btn btn-success btn-sm" onclick="finalizarPoligono()">✅ Finalizar Polígono</button>
       </div>
-      <div id="puntos-poligono-lista" class="small"></div>
+      
+      <!-- Tabla de puntos agregados -->
+      <div id="puntos-poligono-lista" class="mt-3">
+        <div class="table-responsive" id="tabla-puntos-poligono-container" style="display: none;">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 60px;">Vértice</th>
+                <th>ESTE (X)</th>
+                <th>NORTE (Y)</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-puntos-poligono-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -619,15 +651,45 @@ function agregarPuntoLinea() {
 
   map.setView([lat, lon], 13);
 
-  // Actualizar lista
-  document.getElementById('puntos-linea-lista').innerHTML = 
-    `<strong>Puntos agregados:</strong> ${lineaActual.puntos.length}<br>` +
-    `<strong>Ancho:</strong> ${ancho.toFixed(2)} m<br>` +
-    lineaActual.puntos.map((p, i) => `Punto ${i+1}: X=${p[0].toFixed(2)}, Y=${p[1].toFixed(2)}`).join('<br>');
+  // Actualizar tabla de puntos
+  actualizarTablaPuntosLinea();
 
   // Limpiar inputs
   document.getElementById('linea_x').value = '';
   document.getElementById('linea_y').value = '';
+}
+
+function actualizarTablaPuntosLinea() {
+  const tbody = document.getElementById('tabla-puntos-linea-body');
+  const container = document.getElementById('tabla-puntos-linea-container');
+  const ancho = lineaActual.ancho || 0;
+  
+  if (lineaActual.puntos.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  container.style.display = 'block';
+  tbody.innerHTML = '';
+  
+  // Agregar información del ancho como fila especial
+  const rowAncho = document.createElement('tr');
+  rowAncho.className = 'table-info';
+  rowAncho.innerHTML = `
+    <td colspan="3" class="text-center"><strong>Ancho de servidumbre: ${ancho.toFixed(2)} m</strong> | <strong>Puntos: ${lineaActual.puntos.length}</strong></td>
+  `;
+  tbody.appendChild(rowAncho);
+  
+  // Agregar cada punto
+  lineaActual.puntos.forEach((p, i) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="text-center"><strong>V${i + 1}</strong></td>
+      <td>${p[0].toFixed(2)}</td>
+      <td>${p[1].toFixed(2)}</td>
+    `;
+    tbody.appendChild(row);
+  });
 }
 
 function eliminarUltimoPuntoLinea() {
@@ -641,11 +703,8 @@ function eliminarUltimoPuntoLinea() {
   capaDXF.clearLayers();
   redibujarTodasGeometrias();
   
-  document.getElementById('puntos-linea-lista').innerHTML = 
-    lineaActual.puntos.length > 0 ?
-    `<strong>Puntos agregados:</strong> ${lineaActual.puntos.length}<br>` +
-    lineaActual.puntos.map((p, i) => `Punto ${i+1}: X=${p[0].toFixed(2)}, Y=${p[1].toFixed(2)}`).join('<br>') :
-    '';
+  // Actualizar tabla
+  actualizarTablaPuntosLinea();
 }
 
 function finalizarLinea() {
@@ -690,7 +749,12 @@ function finalizarLinea() {
 
   contadorEntidades++;
   lineaActual = { puntos: [], ancho: 0, departamento: '', tipo_servidumbre: '', objeto_servidumbre: '' };
-  document.getElementById('puntos-linea-lista').innerHTML = '';
+  
+  // Limpiar tabla
+  document.getElementById('tabla-puntos-linea-container').style.display = 'none';
+  document.getElementById('tabla-puntos-linea-body').innerHTML = '';
+  
+  // Limpiar inputs
   document.getElementById('linea_x').value = '';
   document.getElementById('linea_y').value = '';
   document.getElementById('linea_ancho').value = '';
@@ -752,14 +816,44 @@ function agregarPuntoPoligono() {
 
   map.setView([lat, lon], 13);
 
-  // Actualizar lista
-  document.getElementById('puntos-poligono-lista').innerHTML = 
-    `<strong>Puntos agregados:</strong> ${poligonoActual.puntos.length}<br>` +
-    poligonoActual.puntos.map((p, i) => `Punto ${i+1}: X=${p[0].toFixed(2)}, Y=${p[1].toFixed(2)}`).join('<br>');
+  // Actualizar tabla de puntos
+  actualizarTablaPuntosPoligono();
 
   // Limpiar inputs
   document.getElementById('poligono_x').value = '';
   document.getElementById('poligono_y').value = '';
+}
+
+function actualizarTablaPuntosPoligono() {
+  const tbody = document.getElementById('tabla-puntos-poligono-body');
+  const container = document.getElementById('tabla-puntos-poligono-container');
+  
+  if (poligonoActual.puntos.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  container.style.display = 'block';
+  tbody.innerHTML = '';
+  
+  // Agregar información de cantidad de puntos como fila especial
+  const rowInfo = document.createElement('tr');
+  rowInfo.className = 'table-success';
+  rowInfo.innerHTML = `
+    <td colspan="3" class="text-center"><strong>Puntos agregados: ${poligonoActual.puntos.length}</strong></td>
+  `;
+  tbody.appendChild(rowInfo);
+  
+  // Agregar cada punto
+  poligonoActual.puntos.forEach((p, i) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="text-center"><strong>V${i + 1}</strong></td>
+      <td>${p[0].toFixed(2)}</td>
+      <td>${p[1].toFixed(2)}</td>
+    `;
+    tbody.appendChild(row);
+  });
 }
 
 function eliminarUltimoPuntoPoligono() {
@@ -773,11 +867,8 @@ function eliminarUltimoPuntoPoligono() {
   capaDXF.clearLayers();
   redibujarTodasGeometrias();
   
-  document.getElementById('puntos-poligono-lista').innerHTML = 
-    poligonoActual.puntos.length > 0 ?
-    `<strong>Puntos agregados:</strong> ${poligonoActual.puntos.length}<br>` +
-    poligonoActual.puntos.map((p, i) => `Punto ${i+1}: X=${p[0].toFixed(2)}, Y=${p[1].toFixed(2)}`).join('<br>') :
-    '';
+  // Actualizar tabla
+  actualizarTablaPuntosPoligono();
 }
 
 function finalizarPoligono() {
@@ -818,7 +909,12 @@ function finalizarPoligono() {
 
   contadorEntidades++;
   poligonoActual = { puntos: [], departamento: '', tipo_servidumbre: '', objeto_servidumbre: '' };
-  document.getElementById('puntos-poligono-lista').innerHTML = '';
+  
+  // Limpiar tabla
+  document.getElementById('tabla-puntos-poligono-container').style.display = 'none';
+  document.getElementById('tabla-puntos-poligono-body').innerHTML = '';
+  
+  // Limpiar inputs
   document.getElementById('poligono_x').value = '';
   document.getElementById('poligono_y').value = '';
   document.getElementById('poligono_departamento').value = '';
