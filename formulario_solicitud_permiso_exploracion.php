@@ -203,7 +203,27 @@ if (!isset($_SESSION['usuario'])) {
 
 
       <input type="hidden" name="puntos" id="puntos">
-      <ul class="mt-3" id="listaPuntos"></ul>
+      
+      <!-- Tabla de puntos del área de exploración -->
+      <div id="tabla-puntos-container" class="mt-3" style="display: none;">
+        <h5>Puntos del Área de Exploración</h5>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered table-sm">
+            <thead class="table-dark">
+              <tr>
+                <th class="text-center">Vértice</th>
+                <th>NORTE (Y)</th>
+                <th>ESTE (X)</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-puntos-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
       <div id="map"></div>
 
       <input type="hidden" name="nroexpediente_usado"> 
@@ -468,6 +488,28 @@ if (!isset($_SESSION['usuario'])) {
       }
     }
 
+    function eliminarPuntoPorIndice(indice) {
+      if (confirm(`¿Está seguro de eliminar el vértice ${indice + 1}?`)) {
+        puntos.splice(indice, 1);
+        actualizarListaPuntos();
+        if (puntos.length >= 3) dibujarPoligono();
+        else if (poligonoLayer) {
+          map.removeLayer(poligonoLayer);
+          poligonoLayer = null;
+        }
+      }
+    }
+
+    function hacerZoomPunto(indice) {
+      if (indice >= 0 && indice < puntos.length) {
+        const punto = puntos[indice];
+        // Convertir coordenadas de POSGAR 2007 a WGS84 para el mapa
+        const [lon, lat] = proj4(fromProjection, toProjection, [punto.y, punto.x]);
+        // Hacer zoom al punto con nivel 17
+        map.setView([lat, lon], 17);
+      }
+    }
+
     function prepararEnvio() {
        if (!validarCategorias()) return false;
        if (!validarPrograma()) return false;
@@ -568,28 +610,60 @@ if (!isset($_SESSION['usuario'])) {
         }
     }
     
-    // Actualizar la lista visual de puntos
+    // Actualizar la tabla visual de puntos
     function actualizarListaPuntos() {
-        const lista = document.getElementById("listaPuntos");
-        lista.innerHTML = "";
+        const container = document.getElementById("tabla-puntos-container");
+        const tbody = document.getElementById("tabla-puntos-body");
+        
+        if (puntos.length === 0) {
+            container.style.display = 'none';
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        container.style.display = 'block';
+        tbody.innerHTML = '';
+        
         puntos.forEach((punto, index) => {
-            const li = document.createElement("li");
-            li.textContent = `V${index + 1}: ESTE: ${punto.x}, NORTE: ${punto.y}`;
+            const tr = document.createElement("tr");
             
-            // Aplicar color según el estado de validación
+            // Determinar estado y color
+            let estadoTexto = '';
+            let estadoColor = 'text-success';
+            
             if (punto.color) {
-                li.style.color = punto.color;
-                
-                // Agregar información del estado
                 if (punto.estado === 'zona_tolerancia') {
-                    li.textContent += " ⚠️ (Fuera del límite - Zona tolerancia)";
-                    li.style.fontWeight = "bold";
+                    estadoTexto = '⚠️ Zona tolerancia';
+                    estadoColor = 'text-warning';
                 } else if (punto.estado === 'dentro_limite') {
-                    li.textContent += " ✅ (Dentro del límite)";
+                    estadoTexto = '✅ Dentro del límite';
+                    estadoColor = 'text-success';
                 }
             } else {
-                // Fallback para puntos sin información de validación
-                li.style.color = 'green';
+                estadoTexto = '✅ OK';
+                estadoColor = 'text-success';
+            }
+            
+            // Añadir indicador de vértice noroeste
+            const verticeLabel = index === 0 ? `<strong>V${index + 1}</strong> (NOROESTE)` : `<strong>V${index + 1}</strong>`;
+            
+            tr.innerHTML = `
+                <td class="text-center">${verticeLabel}</td>
+                <td>${punto.y.toFixed(2)}</td>
+                <td>${punto.x.toFixed(2)}</td>
+                <td class="text-center ${estadoColor}">${estadoTexto}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-primary btn-sm me-1" onclick="hacerZoomPunto(${index})" title="Hacer zoom al punto">
+                        🔍
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPorIndice(${index})" title="Eliminar punto">
+                        🗑️
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
             }
             
             if (index === 0) {

@@ -717,6 +717,16 @@ function eliminarPuntoPerimetroPorIndice(indice){
   }
 }
 
+function hacerZoomPerimetro(indice){
+  if (indice >= 0 && indice < perimetroVertices.length){
+    const punto = perimetroVertices[indice];
+    // Convertir coordenadas de POSGAR 2007 a WGS84 para el mapa
+    const [lon, lat] = proj4(fromProjection, toProjection, [punto.y, punto.x]);
+    // Hacer zoom al punto con nivel 17 (bastante cerca)
+    map.setView([lat, lon], 17);
+  }
+}
+
 function actualizarTablaPerimetro(){
   const container = document.getElementById('tabla-perimetro-container');
   const tbody = document.getElementById('tabla-perimetro-body');
@@ -737,6 +747,9 @@ function actualizarTablaPerimetro(){
       <td>${punto.y.toFixed(2)}</td>
       <td>${punto.x.toFixed(2)}</td>
       <td class="text-center">
+        <button type="button" class="btn btn-primary btn-sm me-1" onclick="hacerZoomPerimetro(${index})" title="Hacer zoom al punto">
+          🔍
+        </button>
         <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPerimetroPorIndice(${index})" title="Eliminar punto">
           <i class="bi bi-trash"></i>
         </button>
@@ -917,6 +930,16 @@ function eliminarPuntoPertenenciaPorIndice(indice){
   }
 }
 
+function hacerZoomPertenencia(indice){
+  if (indice >= 0 && indice < pertenenciaVertices.length){
+    const punto = pertenenciaVertices[indice];
+    // Convertir coordenadas de POSGAR 2007 a WGS84 para el mapa
+    const [lon, lat] = proj4(fromProjection, toProjection, [punto.y, punto.x]);
+    // Hacer zoom al punto con nivel 17 (bastante cerca)
+    map.setView([lat, lon], 17);
+  }
+}
+
 function actualizarTablaPertenencia(){
   const container = document.getElementById('tabla-pertenencia-container');
   const tbody = document.getElementById('tabla-pertenencia-body');
@@ -937,6 +960,9 @@ function actualizarTablaPertenencia(){
       <td>${punto.y.toFixed(2)}</td>
       <td>${punto.x.toFixed(2)}</td>
       <td class="text-center">
+        <button type="button" class="btn btn-primary btn-sm me-1" onclick="hacerZoomPertenencia(${index})" title="Hacer zoom al punto">
+          🔍
+        </button>
         <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPertenenciaPorIndice(${index})" title="Eliminar punto">
           <i class="bi bi-trash"></i>
         </button>

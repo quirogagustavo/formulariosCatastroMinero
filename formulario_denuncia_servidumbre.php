@@ -690,6 +690,9 @@ function actualizarTablaPuntosLinea() {
       <td>${p[0].toFixed(2)}</td>
       <td>${p[1].toFixed(2)}</td>
       <td class="text-center">
+        <button type="button" class="btn btn-primary btn-sm me-1" onclick="hacerZoomLinea(${i})" title="Hacer zoom al punto">
+          🔍
+        </button>
         <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoLinea(${i})" title="Eliminar este punto">
           🗑️
         </button>
@@ -714,6 +717,16 @@ function eliminarPuntoLinea(index) {
     
     // Actualizar tabla
     actualizarTablaPuntosLinea();
+  }
+}
+
+function hacerZoomLinea(index) {
+  if (index >= 0 && index < lineaActual.puntos.length) {
+    const punto = lineaActual.puntos[index];
+    // Convertir coordenadas de POSGAR 2007 a WGS84 para el mapa
+    const [lon, lat] = proj4(fromProjection, toProjection, [punto[0], punto[1]]);
+    // Hacer zoom al punto con nivel 17
+    map.setView([lat, lon], 17);
   }
 }
 
@@ -877,6 +890,9 @@ function actualizarTablaPuntosPoligono() {
       <td>${p[0].toFixed(2)}</td>
       <td>${p[1].toFixed(2)}</td>
       <td class="text-center">
+        <button type="button" class="btn btn-primary btn-sm me-1" onclick="hacerZoomPoligono(${i})" title="Hacer zoom al punto">
+          🔍
+        </button>
         <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPuntoPoligono(${i})" title="Eliminar este punto">
           🗑️
         </button>
@@ -901,6 +917,16 @@ function eliminarPuntoPoligono(index) {
     
     // Actualizar tabla
     actualizarTablaPuntosPoligono();
+  }
+}
+
+function hacerZoomPoligono(index) {
+  if (index >= 0 && index < poligonoActual.puntos.length) {
+    const punto = poligonoActual.puntos[index];
+    // Convertir coordenadas de POSGAR 2007 a WGS84 para el mapa
+    const [lon, lat] = proj4(fromProjection, toProjection, [punto[0], punto[1]]);
+    // Hacer zoom al punto con nivel 17
+    map.setView([lat, lon], 17);
   }
 }
 
