@@ -411,6 +411,22 @@ if (!isset($_SESSION['usuario'])) {
       return { este: este07, norte: norte07 };
     }
 
+    function actualizarPlaceholdersLabor() {
+      const sistema = document.getElementById('sistemaCoordenadasLabor').value;
+      const inputX = document.getElementById('muestra_x');
+      const inputY = document.getElementById('muestra_y');
+      
+      if (sistema === '5344') {
+        // POSGAR 2007
+        inputX.placeholder = 'Ejemplo: 2492370.69';
+        inputY.placeholder = 'Ejemplo: 6677723.20';
+      } else {
+        // POSGAR 94
+        inputX.placeholder = 'Ejemplo: 2492382.03';
+        inputY.placeholder = 'Ejemplo: 6677729.89';
+      }
+    }
+
     function agregarPuntoUnico() {
       let muestra_x = parseFloat(document.getElementById("muestra_x").value);
       let muestra_y = parseFloat(document.getElementById("muestra_y").value);
@@ -477,9 +493,6 @@ if (!isset($_SESSION['usuario'])) {
       
       map.setView([lat, lon], 13);
     }
-
-  
-}
 
 function eliminarUltimoPuntoUnico(event) {
   event.preventDefault();
