@@ -472,6 +472,10 @@ if (!isset($_SESSION['usuario'])) {
         muestra_x = convertido.este;
         muestra_y = convertido.norte;
         
+        // IMPORTANTE: Actualizar los campos del formulario con las coordenadas convertidas
+        document.getElementById("muestra_x").value = muestra_x.toFixed(2);
+        document.getElementById("muestra_y").value = muestra_y.toFixed(2);
+        
         // Mostrar mensaje informativo
         alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
               `ESTE: ${muestra_x.toFixed(2)}\n` +
