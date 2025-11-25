@@ -296,7 +296,21 @@ if (!isset($_SESSION['usuario'])) {
         <button type="button" onclick="agregarPuntoUnico()" class="btn btn-orange flex-fill">Agregar Punto</button>
         <button type="button" onclick="eliminarUltimoPuntoUnico(event)" class="btn btn-danger flex-fill">Eliminar Último</button>
       </div>
-    
+    </div>
+  </div>
+  
+  <!-- Información del punto agregado en POSGAR 2007 -->
+  <div id="infoPuntoAgregado" class="alert alert-success mt-3" style="display: none;">
+    <h6 class="fw-bold">📍 Punto de Labor Legal (POSGAR 2007)</h6>
+    <div class="row">
+      <div class="col-md-6">
+        <strong>X (ESTE):</strong> <span id="puntoEste">-</span>
+      </div>
+      <div class="col-md-6">
+        <strong>Y (NORTE):</strong> <span id="puntoNorte">-</span>
+      </div>
+    </div>
+  </div>
        
    
 </fieldset>
@@ -472,6 +486,11 @@ if (!isset($_SESSION['usuario'])) {
         .openPopup();
       
       map.setView([lat, lon], 13);
+      
+      // Mostrar información del punto en POSGAR 2007
+      document.getElementById('infoPuntoAgregado').style.display = 'block';
+      document.getElementById('puntoEste').textContent = muestra_x.toFixed(2);
+      document.getElementById('puntoNorte').textContent = muestra_y.toFixed(2);
     }
 
 function eliminarUltimoPuntoUnico(event) {
@@ -481,6 +500,11 @@ function eliminarUltimoPuntoUnico(event) {
     marcadorUnico = null;
     document.getElementById("muestra_x").value = '';
     document.getElementById("muestra_y").value = '';
+    
+    // Ocultar información del punto
+    document.getElementById('infoPuntoAgregado').style.display = 'none';
+    document.getElementById('puntoEste').textContent = '-';
+    document.getElementById('puntoNorte').textContent = '-';
   }
 }
 
