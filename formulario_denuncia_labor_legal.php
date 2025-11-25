@@ -365,8 +365,8 @@ if (!isset($_SESSION['usuario'])) {
     // POSGAR 2007 (EPSG:5344) - Faja 2
     proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
     
-    // POSGAR 94 personalizado con parámetros IGN para transformación a WGS84
-    proj4.defs("EPSG:922182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+    // POSGAR 94 (EPSG:22182) - Faja 2
+    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
 
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
@@ -382,35 +382,6 @@ if (!isset($_SESSION['usuario'])) {
     /**
      * Actualiza los placeholders de los campos según el sistema de coordenadas seleccionado
      */
-    function actualizarPlaceholdersLabor() {
-      const sistema = document.getElementById('sistemaCoordenadasLabor').value;
-      const inputX = document.getElementById('muestra_x');
-      const inputY = document.getElementById('muestra_y');
-      
-      if (sistema === '5344') {
-        // POSGAR 2007
-        inputX.placeholder = 'Ejemplo: 2492370.69';
-        inputY.placeholder = 'Ejemplo: 6677723.20';
-      } else {
-        // POSGAR 94
-        inputX.placeholder = 'Ejemplo: 2492382.03';
-        inputY.placeholder = 'Ejemplo: 6677729.89';
-      }
-    }
-    
-    /**
-     * Convierte coordenadas de POSGAR 94 a POSGAR 2007 usando parámetros oficiales del IGN
-     */
-    function convertirPOSGAR94aPOSGAR2007(este94, norte94) {
-      // 1. POSGAR 94 con parámetros IGN -> WGS84
-      const [lon, lat] = proj4('EPSG:922182', 'WGS84', [este94, norte94]);
-      
-      // 2. WGS84 -> POSGAR 2007
-      const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
-      
-      return { este: este07, norte: norte07 };
-    }
-
     function actualizarPlaceholdersLabor() {
       const sistema = document.getElementById('sistemaCoordenadasLabor').value;
       const inputX = document.getElementById('muestra_x');
@@ -465,12 +436,17 @@ if (!isset($_SESSION['usuario'])) {
         }
         
         // Convertir de POSGAR 94 a POSGAR 2007
-        const convertido = convertirPOSGAR94aPOSGAR2007(muestra_x, muestra_y);
-        console.log(`Conversión POSGAR 94 -> 2007: (${muestra_x}, ${muestra_y}) -> (${convertido.este.toFixed(2)}, ${convertido.norte.toFixed(2)})`);
+        // 1. POSGAR 94 -> WGS84
+        const [lon, lat] = proj4('EPSG:22182', 'WGS84', [muestra_x, muestra_y]);
+        
+        // 2. WGS84 -> POSGAR 2007
+        const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
+        
+        console.log(`Conversión POSGAR 94 -> 2007: (${muestra_x}, ${muestra_y}) -> (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
         
         // Actualizar valores a POSGAR 2007
-        muestra_x = convertido.este;
-        muestra_y = convertido.norte;
+        muestra_x = este07;
+        muestra_y = norte07;
         
         // IMPORTANTE: Actualizar los campos del formulario con las coordenadas convertidas
         document.getElementById("muestra_x").value = muestra_x.toFixed(2);
