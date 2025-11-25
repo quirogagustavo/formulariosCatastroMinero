@@ -531,9 +531,8 @@ let poligonoActual = {
 };
 
 // Definiciones de proyecciones
-proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
 proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
-proj4.defs("EPSG:922182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
 
 const crs22182 = new L.Proj.CRS('EPSG:22182',
   proj4.defs('EPSG:22182'),
@@ -549,7 +548,7 @@ const toProjection = proj4("WGS84");
 // Función de conversión POSGAR 94 a POSGAR 2007
 function convertirPOSGAR94aPOSGAR2007(este94, norte94) {
   // Paso 1: POSGAR 94 (con parámetros IGN) → WGS84
-  const [lon, lat] = proj4('EPSG:922182', 'WGS84', [este94, norte94]);
+  const [lon, lat] = proj4('EPSG:22182', 'WGS84', [este94, norte94]);
   // Paso 2: WGS84 → POSGAR 2007
   const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
   return { este: este07, norte: norte07 };

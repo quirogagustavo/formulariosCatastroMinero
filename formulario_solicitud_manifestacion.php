@@ -437,14 +437,11 @@ if (!isset($_SESSION['usuario'])) {
     let marcadorUnico = null;
 
     // Definiciones de sistemas de coordenadas
-    // POSGAR 94 (EPSG:22182)
-    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
-    
     // POSGAR 2007 (EPSG:5344) - Faja 2
     proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
     
-    // POSGAR 94 personalizado con parámetros IGN para transformación a WGS84
-    proj4.defs("EPSG:922182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+    // POSGAR 94 (EPSG:22182) con parámetros towgs84 del IGN
+    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
 
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
