@@ -286,7 +286,14 @@ if (!isset($_SESSION['usuario'])) {
     let puntos = [];
     let poligonoLayer;
 
-    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
+
+// POSGAR 94 geodésico
+proj4.defs("POSGAR94-GEO", "+proj=longlat +ellps=WGS84 +no_defs");
+
+// POSGAR 2007 geodésico con transformación IGN
+proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +no_defs");
+
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
     {

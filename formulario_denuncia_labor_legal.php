@@ -373,11 +373,17 @@ if (!isset($_SESSION['usuario'])) {
     let marcadorUnico = null;
 
     // Definiciones de sistemas de coordenadas
-    // POSGAR 2007 (EPSG:5344) - Faja 2
+    // POSGAR 2007 (EPSG:5344) - Faja 2 proyectado
     proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
     
-    // POSGAR 94 (EPSG:22182) - Faja 2 con parámetros towgs84 del IGN
-    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+    // POSGAR 94 (EPSG:22182) - Faja 2 proyectado SIN towgs84
+    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
+    
+    // POSGAR 94 geodésico (EPSG:4326 base WGS84)
+    proj4.defs("POSGAR94-GEO", "+proj=longlat +ellps=WGS84 +no_defs");
+    
+    // POSGAR 2007 geodésico con transformación IGN desde POSGAR 94
+    proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +no_defs");
 
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
@@ -446,12 +452,15 @@ if (!isset($_SESSION['usuario'])) {
           return;
         }
         
-        // Convertir de POSGAR 94 a POSGAR 2007
-        // 1. POSGAR 94 -> WGS84
-        const [lon, lat] = proj4('EPSG:22182', 'WGS84', [muestra_x, muestra_y]);
+        // Convertir de POSGAR 94 a POSGAR 2007 correctamente
+        // 1. POSGAR 94 planas -> POSGAR 94 geodésicas
+        const [lon94, lat94] = proj4('EPSG:22182', 'POSGAR94-GEO', [muestra_x, muestra_y]);
         
-        // 2. WGS84 -> POSGAR 2007
-        const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
+        // 2. POSGAR 94 geodésicas -> POSGAR 2007 geodésicas (con parámetros IGN)
+        const [lon07, lat07] = proj4('POSGAR94-GEO', 'POSGAR07-GEO', [lon94, lat94]);
+        
+        // 3. POSGAR 2007 geodésicas -> POSGAR 2007 planas
+        const [este07, norte07] = proj4('POSGAR07-GEO', 'EPSG:5344', [lon07, lat07]);
         
         console.log(`Conversión POSGAR 94 -> 2007: (${muestra_x}, ${muestra_y}) -> (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
         
