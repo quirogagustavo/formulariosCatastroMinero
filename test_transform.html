@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test POSGAR Transform</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
+</head>
+<body>
+  <h1>Test de Transformación POSGAR 94 → POSGAR 2007</h1>
+  <div style="margin: 20px;">
+    <h2>Entrada:</h2>
+    <p>ESTE 94: <input type="number" id="este94" value="2513614.40" step="0.01"></p>
+    <p>NORTE 94: <input type="number" id="norte94" value="6596573.50" step="0.01"></p>
+    <button onclick="testTransform()">Transformar</button>
+    
+    <h2>Resultado:</h2>
+    <pre id="resultado"></pre>
+    
+    <h2>Consola:</h2>
+    <pre id="consola" style="background: #f0f0f0; padding: 10px; max-height: 400px; overflow-y: auto;"></pre>
+  </div>
+
+  <script>
+    // Override console.log to capture output
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      const consolaDiv = document.getElementById('consola');
+      consolaDiv.textContent += args.join(' ') + '\n';
+      consolaDiv.scrollTop = consolaDiv.scrollHeight;
+    };
+
+    // Definir sistemas de coordenadas
+    (function() {
+      console.log('=== Definiendo sistemas de coordenadas ===');
+      
+      // POSGAR 2007 Faja 2 - Proyectado (coordenadas planas)
+      // Basado en elipsoide GRS80
+      proj4.defs("EPSG:5344", 
+        "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 " +
+        "+ellps=GRS80 +units=m +no_defs"
+      );
+      console.log('✓ EPSG:5344 definido (POSGAR 2007 Faja 2)');
+      
+      // POSGAR 94 Faja 2 - Proyectado (coordenadas planas)
+      // Basado en elipsoide WGS84 con parámetros de transformación IGN
+      proj4.defs("EPSG:22182", 
+        "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 " +
+        "+ellps=WGS84 " +
+        "+towgs84=-11.340,-6.686,3.836,0.214569,-0.102025,0.374988,0.121173600 " +
+        "+units=m +no_defs"
+      );
+      console.log('✓ EPSG:22182 definido (POSGAR 94 Faja 2 con parámetros IGN)');
+      console.log('=== Sistemas listos ===\n');
+    })();
+
+    function testTransform() {
+      const este94 = parseFloat(document.getElementById('este94').value);
+      const norte94 = parseFloat(document.getElementById('norte94').value);
+      const resultadoDiv = document.getElementById('resultado');
+      
+      try {
+        console.log(`\n=== TRANSFORMACIÓN ===`);
+        console.log(`Input: POSGAR 94 (${este94.toFixed(2)}, ${norte94.toFixed(2)})`);
+        
+        // Transformación directa POSGAR 94 → POSGAR 2007
+        const [este07, norte07] = proj4('EPSG:22182', 'EPSG:5344', [este94, norte94]);
+        console.log(`Output: POSGAR 2007 (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
+        
+        // Calcular diferencias
+        const diffEste = este07 - este94;
+        const diffNorte = norte07 - norte94;
+        console.log(`Diferencias: ΔE=${diffEste.toFixed(3)}m, ΔN=${diffNorte.toFixed(3)}m`);
+        
+        resultadoDiv.innerHTML = `
+<strong>POSGAR 2007:</strong>
+  ESTE:  ${este07.toFixed(2)} m
+  NORTE: ${norte07.toFixed(2)} m
+  
+<strong>Diferencias:</strong>
+  ΔE = ${diffEste.toFixed(3)} m
+  ΔN = ${diffNorte.toFixed(3)} m
+        `;
+        
+        if (Math.abs(diffEste) < 0.01 && Math.abs(diffNorte) < 0.01) {
+          resultadoDiv.innerHTML += `\n<span style="color: red; font-weight: bold;">⚠️ ADVERTENCIA: Las diferencias son muy pequeñas. La transformación podría no estar funcionando correctamente.</span>`;
+          console.log('⚠️ ADVERTENCIA: Diferencias muy pequeñas - posible problema');
+        } else {
+          resultadoDiv.innerHTML += `\n<span style="color: green; font-weight: bold;">✓ Transformación exitosa</span>`;
+          console.log('✓ Transformación exitosa');
+        }
+        
+      } catch (error) {
+        resultadoDiv.textContent = '❌ Error: ' + error.message;
+        console.error('❌ Error:', error);
+      }
+    }
+    
+    // Ejecutar automáticamente al cargar
+    window.onload = function() {
+      testTransform();
+    };
+  </script>
+</body>
+</html>

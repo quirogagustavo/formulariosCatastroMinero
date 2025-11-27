@@ -21,6 +21,9 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
   <script src="https://unpkg.com/proj4leaflet"></script>
   <script src="https://unpkg.com/leaflet-providers"></script>
+  
+  <!-- Funciones de transformación POSGAR -->
+  <script src="posgar_transform.js?v=4.0"></script>
 
   <link href="style.css?v=<?=time()?>" rel="stylesheet" type="text/css" /> 
 
@@ -438,17 +441,7 @@ if (!isset($_SESSION['usuario'])) {
 
     // Definiciones de sistemas de coordenadas
     // POSGAR 2007 (EPSG:5344) - Faja 2
-    proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
-    
-    // POSGAR 94 (EPSG:22182) - Faja 2 proyectado SIN towgs84
-    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
-
-// POSGAR 94 geodésico con parámetros towgs84 del IGN
-proj4.defs("POSGAR94-GEO", "+proj=longlat +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +no_defs");
-
-// POSGAR 2007 geodésico (destino)
-proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs");
-
+    // Definiciones de proyecciones (ahora en posgar_transform.js)
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
     {
@@ -460,18 +453,7 @@ proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +n
     const fromProjection = proj4("EPSG:22182");
     const toProjection = proj4("WGS84");
     
-    /**
-     * Convierte coordenadas de POSGAR 94 a POSGAR 2007 usando parámetros oficiales del IGN
-     */
-    function convertirPOSGAR94aPOSGAR2007(este94, norte94) {
-      // 1. POSGAR 94 con parámetros IGN -> WGS84
-      const [lon, lat] = proj4('EPSG:922182', 'WGS84', [este94, norte94]);
-      
-      // 2. WGS84 -> POSGAR 2007
-      const [este07, norte07] = proj4('WGS84', 'EPSG:5344', [lon, lat]);
-      
-      return { este: este07, norte: norte07 };
-    }
+    // Función convertirPOSGAR94a2007() ahora en posgar_transform.js
     
     /**
      * Actualiza los placeholders según el sistema de coordenadas seleccionado
@@ -538,12 +520,12 @@ proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +n
     }
     
     // Convertir de POSGAR 94 a POSGAR 2007
-    const convertido = convertirPOSGAR94aPOSGAR2007(muestra_y, muestra_x);
-    console.log(`Conversión POSGAR 94 -> 2007: (${muestra_y}, ${muestra_x}) -> (${convertido.este.toFixed(2)}, ${convertido.norte.toFixed(2)})`);
+    const convertido = convertirPOSGAR94a2007(muestra_y, muestra_x);
+    console.log(`Conversión POSGAR 94 -> 2007: (${muestra_y}, ${muestra_x}) -> (${convertido.este07.toFixed(2)}, ${convertido.norte07.toFixed(2)})`);
     
     // Actualizar valores a POSGAR 2007
-    muestra_y = convertido.este;
-    muestra_x = convertido.norte;
+    muestra_y = convertido.este07;
+    muestra_x = convertido.norte07;
     
     // Mostrar mensaje informativo
     alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
@@ -617,12 +599,12 @@ function eliminarUltimoPuntoUnico(event) {
         }
         
         // Convertir de POSGAR 94 a POSGAR 2007
-        const convertido = convertirPOSGAR94aPOSGAR2007(y, x);
-        console.log(`Conversión POSGAR 94 -> 2007: (${y}, ${x}) -> (${convertido.este.toFixed(2)}, ${convertido.norte.toFixed(2)})`);
+        const convertido = convertirPOSGAR94a2007(y, x);
+        console.log(`Conversión POSGAR 94 -> 2007: (${y}, ${x}) -> (${convertido.este07.toFixed(2)}, ${convertido.norte07.toFixed(2)})`);
         
         // Actualizar valores a POSGAR 2007
-        y = convertido.este;
-        x = convertido.norte;
+        y = convertido.este07;
+        x = convertido.norte07;
         
         // Mostrar mensaje informativo
         alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +

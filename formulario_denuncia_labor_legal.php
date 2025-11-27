@@ -19,6 +19,9 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
   <script src="https://unpkg.com/proj4leaflet"></script>
   <script src="https://unpkg.com/leaflet-providers"></script>
+  
+  <!-- Funciones de transformación POSGAR -->
+  <script src="posgar_transform.js?v=4.0"></script>
 
   <link href="style.css" rel="stylesheet" type="text/css" /> 
 
@@ -368,17 +371,12 @@ if (!isset($_SESSION['usuario'])) {
   <script src="expediente_tipo2.js"></script>
   <script src="solicitante.js"></script>
   <script>
-    // ⚠️ VERSIÓN 2025-11-26: Corrección transformación geodésica IGN
+    // ⚠️ VERSIÓN 2025-11-26: Usando posgar_transform.js centralizado
     let puntos = [];
     let poligonoLayer;
     let marcadorUnico = null;
 
-    // Definiciones de sistemas de coordenadas
-    // POSGAR 2007 (EPSG:5344) - Faja 2 proyectado
-    proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +datum=WGS84 +units=m +no_defs");
-    
-    // POSGAR 94 (EPSG:22182) - Faja 2 proyectado CON towgs84 IGN
-    proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +units=m +no_defs");
+    // Las definiciones de proj4 están en posgar_transform.js
 
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),
@@ -423,49 +421,43 @@ if (!isset($_SESSION['usuario'])) {
       
       // Validar rangos según el sistema de coordenadas
       if (sistema === '5344') {
-        // POSGAR 2007: ESTE debe comenzar con 2, NORTE con 6
-        if (muestra_x < 2000000 || muestra_x >= 3000000) {
-          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+        // POSGAR 2007: Validar usando función centralizada
+        const validacion = validarCoordenadasPOSGAR2007(muestra_x, muestra_y);
+        if (!validacion.valido) {
+          alert(validacion.mensaje);
           document.getElementById("muestra_x").focus();
-          return;
-        }
-        if (muestra_y < 6000000 || muestra_y >= 7000000) {
-          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
-          document.getElementById("muestra_y").focus();
           return;
         }
       } else {
-        // POSGAR 94: rangos similares pero se convertirán
-        if (muestra_x < 2000000 || muestra_x >= 3000000) {
-          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
+        // POSGAR 94: Validar y luego convertir
+        const validacion = validarCoordenadasPOSGAR94(muestra_x, muestra_y);
+        if (!validacion.valido) {
+          alert(validacion.mensaje);
           document.getElementById("muestra_x").focus();
           return;
         }
-        if (muestra_y < 6000000 || muestra_y >= 7000000) {
-          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
-          document.getElementById("muestra_y").focus();
+        
+        // Convertir usando función centralizada
+        try {
+          const resultado = convertirPOSGAR94a2007(muestra_x, muestra_y);
+          
+          // Actualizar valores a POSGAR 2007
+          muestra_x = resultado.este07;
+          muestra_y = resultado.norte07;
+          
+          // IMPORTANTE: Actualizar los campos del formulario con las coordenadas convertidas
+          document.getElementById("muestra_x").value = muestra_x.toFixed(2);
+          document.getElementById("muestra_y").value = muestra_y.toFixed(2);
+          
+          // Mostrar mensaje informativo con diferencias
+          alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
+                `ESTE: ${muestra_x.toFixed(2)} (Δ=${resultado.diferencias.este.toFixed(3)}m)\n` +
+                `NORTE: ${muestra_y.toFixed(2)} (Δ=${resultado.diferencias.norte.toFixed(3)}m)\n\n` +
+                `Las coordenadas se guardarán en POSGAR 2007.`);
+        } catch (error) {
+          alert('❌ Error al convertir coordenadas: ' + error.message);
           return;
         }
-        
-        // Convertir de POSGAR 94 a POSGAR 2007 usando parámetros IGN
-        // Proj4 aplicará automáticamente towgs84 definido en EPSG:22182
-        const [este07, norte07] = proj4('EPSG:22182', 'EPSG:5344', [muestra_x, muestra_y]);
-        
-        console.log(`Conversión POSGAR 94 -> 2007: (${muestra_x}, ${muestra_y}) -> (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
-        
-        // Actualizar valores a POSGAR 2007
-        muestra_x = este07;
-        muestra_y = norte07;
-        
-        // IMPORTANTE: Actualizar los campos del formulario con las coordenadas convertidas
-        document.getElementById("muestra_x").value = muestra_x.toFixed(2);
-        document.getElementById("muestra_y").value = muestra_y.toFixed(2);
-        
-        // Mostrar mensaje informativo
-        alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
-              `ESTE: ${muestra_x.toFixed(2)}\n` +
-              `NORTE: ${muestra_y.toFixed(2)}\n\n` +
-              `Las coordenadas se guardarán en POSGAR 2007.`);
       }
       
       // Usar POSGAR 2007 para visualización

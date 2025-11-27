@@ -20,7 +20,9 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://unpkg.com/proj4leaflet"></script>
   <script src="https://unpkg.com/leaflet-providers"></script>
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-
+  
+  <!-- Funciones de transformación POSGAR -->
+  <script src="posgar_transform.js?v=4.0"></script>
 
   <link href="style.css" rel="stylesheet" type="text/css" /> 
   <style>
@@ -553,13 +555,7 @@ if (!isset($_SESSION['usuario'])) {
   let pertenenciaVertices = [];
   let pertenenciaLayers = [];
 
-proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
-
-// POSGAR 94 geodésico con parámetros towgs84 del IGN
-proj4.defs("POSGAR94-GEO", "+proj=longlat +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +no_defs");
-
-// POSGAR 2007 geodésico (destino)
-proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs");
+// Definiciones de proyecciones (ahora en posgar_transform.js)
 
     const crs22182 = new L.Proj.CRS('EPSG:22182',
     proj4.defs('EPSG:22182'),

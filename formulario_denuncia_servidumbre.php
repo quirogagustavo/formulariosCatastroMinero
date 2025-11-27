@@ -24,7 +24,9 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://cdn.jsdelivr.net/npm/dxf-parser/dist/dxf-parser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
   <script src="https://unpkg.com/leaflet-providers"></script>
-
+  
+  <!-- Funciones de transformación POSGAR -->
+  <script src="posgar_transform.js?v=4.0"></script>
 
  <link href="style.css" rel="stylesheet" type="text/css" /> 
 
@@ -530,16 +532,7 @@ let poligonoActual = {
   objeto_servidumbre: ''
 };
 
-// Definiciones de proyecciones
-proj4.defs("EPSG:5344", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
-proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
-
-// POSGAR 94 geodésico con parámetros towgs84 del IGN
-proj4.defs("POSGAR94-GEO", "+proj=longlat +ellps=WGS84 +towgs84=-11.340,-6.686,3.836,0.000000214569,-0.000000102025,0.000000374988,0.0001211736 +no_defs");
-
-// POSGAR 2007 geodésico (destino)
-proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs");
-
+// Definiciones de proyecciones (ahora en posgar_transform.js)
 const crs22182 = new L.Proj.CRS('EPSG:22182',
   proj4.defs('EPSG:22182'),
   {
@@ -551,16 +544,8 @@ const crs22182 = new L.Proj.CRS('EPSG:22182',
 const fromProjection = proj4("EPSG:22182");
 const toProjection = proj4("WGS84");
 
-// Función de conversión POSGAR 94 a POSGAR 2007 correcta
-function convertirPOSGAR94aPOSGAR2007(este94, norte94) {
-  // Paso 1: POSGAR 94 planas → POSGAR 94 geodésicas
-  const [lon94, lat94] = proj4('EPSG:22182', 'POSGAR94-GEO', [este94, norte94]);
-  // Paso 2: POSGAR 94 geodésicas → POSGAR 2007 geodésicas (con parámetros IGN)
-  const [lon07, lat07] = proj4('POSGAR94-GEO', 'POSGAR07-GEO', [lon94, lat94]);
-  // Paso 3: POSGAR 2007 geodésicas → POSGAR 2007 planas
-  const [este07, norte07] = proj4('POSGAR07-GEO', 'EPSG:5344', [lon07, lat07]);
-  return { este: este07, norte: norte07 };
-}
+// Función de conversión POSGAR 94 a POSGAR 2007 (ahora en posgar_transform.js)
+// Usar: convertirPOSGAR94a2007(este94, norte94) -> retorna {este07, norte07, diferencias}
 
 // Actualizar placeholders según sistema seleccionado
 function actualizarPlaceholdersServidumbre() {
@@ -626,10 +611,10 @@ function agregarPuntoLinea() {
       alert('Coordenadas fuera de rango para POSGAR 94.\nESTE: debe estar entre 2,000,000 y 3,000,000\nNORTE: debe estar entre 6,000,000 y 7,000,000\n\nEjemplos válidos:\nESTE: 2492382.03\nNORTE: 6677729.89');
       return;
     }
-    const convertido = convertirPOSGAR94aPOSGAR2007(x, y);
-    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\nESTE: ${convertido.este.toFixed(2)}\nNORTE: ${convertido.norte.toFixed(2)}`);
-    x = convertido.este;
-    y = convertido.norte;
+    const convertido = convertirPOSGAR94a2007(x, y);
+    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\nESTE: ${convertido.este07.toFixed(2)}\nNORTE: ${convertido.norte07.toFixed(2)}`);
+    x = convertido.este07;
+    y = convertido.norte07;
   } else {
     if (x < 2000000 || x > 3000000 || y < 6000000 || y > 7000000) {
       alert('Coordenadas fuera de rango.\nESTE: debe estar entre 2,000,000 y 3,000,000\nNORTE: debe estar entre 6,000,000 y 7,000,000\n\nEjemplos válidos:\nESTE: 2492370.69\nNORTE: 6677723.20');
@@ -828,10 +813,10 @@ function agregarPuntoPoligono() {
       alert('Coordenadas fuera de rango para POSGAR 94.\nESTE: debe estar entre 2,000,000 y 3,000,000\nNORTE: debe estar entre 6,000,000 y 7,000,000\n\nEjemplos válidos:\nESTE: 2492382.03\nNORTE: 6677729.89');
       return;
     }
-    const convertido = convertirPOSGAR94aPOSGAR2007(x, y);
-    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\nESTE: ${convertido.este.toFixed(2)}\nNORTE: ${convertido.norte.toFixed(2)}`);
-    x = convertido.este;
-    y = convertido.norte;
+    const convertido = convertirPOSGAR94a2007(x, y);
+    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\nESTE: ${convertido.este07.toFixed(2)}\nNORTE: ${convertido.norte07.toFixed(2)}`);
+    x = convertido.este07;
+    y = convertido.norte07;
   } else {
     if (x < 2000000 || x > 3000000 || y < 6000000 || y > 7000000) {
       alert('Coordenadas fuera de rango.\nESTE: debe estar entre 2,000,000 y 3,000,000\nNORTE: debe estar entre 6,000,000 y 7,000,000\n\nEjemplos válidos:\nESTE: 2492370.69\nNORTE: 6677723.20');
@@ -1199,8 +1184,8 @@ document.getElementById("fileInput").addEventListener("change", function(e) {
           
           // Convertir POSGAR 94 (22182) a POSGAR 2007 (5344)
           const coordsConvertidas = coords.map(c => {
-            const convertido = convertirPOSGAR94aPOSGAR2007(c[0], c[1]);
-            return [convertido.este, convertido.norte];
+            const convertido = convertirPOSGAR94a2007(c[0], c[1]);
+            return [convertido.este07, convertido.norte07];
           });
           
           let coordsLeaflet = coordsConvertidas.map(c => {
