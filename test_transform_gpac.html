@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Transformación POSGAR 94 → 2007 (IGN vs GPAC)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script src="posgar_transform.js?v=5.0"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .metodo-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .metodo-selector label {
+            margin-right: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .metodo-selector input[type="radio"] {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .resultados {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 2px solid #4CAF50;
+        }
+        .resultado-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-left: 4px solid #4CAF50;
+        }
+        .resultado-item strong {
+            color: #2c3e50;
+        }
+        .diferencias {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+        }
+        .comparacion {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+        .comparacion table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .comparacion th, .comparacion td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .comparacion th {
+            background: #4CAF50;
+            color: white;
+        }
+        .metodo-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .metodo-ign {
+            background: #2196F3;
+            color: white;
+        }
+        .metodo-gpac {
+            background: #FF9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Transformación POSGAR 94 → 2007</h1>
+        <p>Prueba de conversión con dos métodos: IGN (oficial) y GPAC (local San Juan)</p>
+        
+        <div class="metodo-selector">
+            <strong>Seleccionar método de transformación:</strong><br><br>
+            <label>
+                <input type="radio" name="metodo" value="IGN" checked>
+                <span class="metodo-badge metodo-ign">IGN</span> 
+                Parámetros oficiales Instituto Geográfico Nacional (Helmert 7 parámetros)
+            </label>
+            <label>
+                <input type="radio" name="metodo" value="GPAC">
+                <span class="metodo-badge metodo-gpac">GPAC</span> 
+                Fórmula local Gestión Provincial de Agrimensura y Catastro
+            </label>
+        </div>
+        
+        <div class="input-group">
+            <label for="este94">ESTE POSGAR 94 (metros):</label>
+            <input type="number" id="este94" value="2513614.40" step="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="norte94">NORTE POSGAR 94 (metros):</label>
+            <input type="number" id="norte94" value="6596573.50" step="0.01">
+        </div>
+        
+        <button onclick="ejecutarTransformacion()">Convertir Coordenadas</button>
+        <button onclick="compararMetodos()" style="background: #2196F3;">Comparar Ambos Métodos</button>
+        
+        <div id="resultados"></div>
+    </div>
+
+    <script>
+        function ejecutarTransformacion() {
+            const este94 = parseFloat(document.getElementById('este94').value);
+            const norte94 = parseFloat(document.getElementById('norte94').value);
+            const metodoSeleccionado = document.querySelector('input[name="metodo"]:checked').value;
+            
+            console.clear();
+            console.log('='.repeat(60));
+            console.log(`Transformación POSGAR 94 → 2007 (Método: ${metodoSeleccionado})`);
+            console.log('='.repeat(60));
+            
+            try {
+                // Ejecutar conversión con método seleccionado
+                const resultado = convertirPOSGAR94a2007(este94, norte94, metodoSeleccionado);
+                
+                const metodoClass = metodoSeleccionado === 'IGN' ? 'metodo-ign' : 'metodo-gpac';
+                
+                document.getElementById('resultados').innerHTML = `
+                    <div class="resultados">
+                        <h2>Resultados de Transformación 
+                            <span class="metodo-badge ${metodoClass}">${metodoSeleccionado}</span>
+                        </h2>
+                        
+                        <div class="resultado-item">
+                            <strong>POSGAR 94 (entrada):</strong><br>
+                            ESTE: ${este94.toFixed(2)} m<br>
+                            NORTE: ${norte94.toFixed(2)} m
+                        </div>
+                        
+                        <div class="resultado-item" style="border-left-color: #2196F3;">
+                            <strong>POSGAR 2007 (resultado):</strong><br>
+                            ESTE: ${resultado.este07.toFixed(2)} m<br>
+                            NORTE: ${resultado.norte07.toFixed(2)} m
+                        </div>
+                        
+                        <div class="diferencias">
+                            <strong>📊 Diferencias aplicadas:</strong><br>
+                            ΔE (Este): ${(resultado.este07 - este94).toFixed(3)} m<br>
+                            ΔN (Norte): ${(resultado.norte07 - norte94).toFixed(3)} m
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px;">
+                            <strong>ℹ️ Método utilizado:</strong> ${metodoSeleccionado}<br>
+                            ${metodoSeleccionado === 'IGN' ? 
+                                'Transformación Helmert 7 parámetros (IGN oficial)' : 
+                                'Fórmula de corrección local GPAC San Juan'}
+                        </div>
+                    </div>
+                `;
+                
+                console.log('Transformación completada exitosamente');
+                
+            } catch (error) {
+                console.error('Error en transformación:', error);
+                document.getElementById('resultados').innerHTML = `
+                    <div class="resultados" style="border-color: #f44336; background: #ffebee;">
+                        <h2 style="color: #f44336;">❌ Error</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function compararMetodos() {
+            const este94 = parseFloat(document.getElementById('este94').value);
+            const norte94 = parseFloat(document.getElementById('norte94').value);
+            
+            console.clear();
+            console.log('='.repeat(60));
+            console.log('Comparación de Métodos IGN vs GPAC');
+            console.log('='.repeat(60));
+            
+            try {
+                // Calcular con ambos métodos
+                const resultadoIGN = convertirPOSGAR94a2007(este94, norte94, 'IGN');
+                const resultadoGPAC = convertirPOSGAR94a2007(este94, norte94, 'GPAC');
+                
+                // Calcular diferencias entre métodos
+                const diffEste = resultadoIGN.este07 - resultadoGPAC.este07;
+                const diffNorte = resultadoIGN.norte07 - resultadoGPAC.norte07;
+                const distancia = Math.sqrt(diffEste * diffEste + diffNorte * diffNorte);
+                
+                document.getElementById('resultados').innerHTML = `
+                    <div class="resultados">
+                        <h2>Comparación de Métodos</h2>
+                        
+                        <div class="resultado-item">
+                            <strong>POSGAR 94 (entrada):</strong><br>
+                            ESTE: ${este94.toFixed(2)} m<br>
+                            NORTE: ${norte94.toFixed(2)} m
+                        </div>
+                        
+                        <div class="comparacion">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Método</th>
+                                        <th>ESTE 2007 (m)</th>
+                                        <th>NORTE 2007 (m)</th>
+                                        <th>ΔE (m)</th>
+                                        <th>ΔN (m)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="metodo-badge metodo-ign">IGN</span></td>
+                                        <td>${resultadoIGN.este07.toFixed(3)}</td>
+                                        <td>${resultadoIGN.norte07.toFixed(3)}</td>
+                                        <td>${(resultadoIGN.este07 - este94).toFixed(3)}</td>
+                                        <td>${(resultadoIGN.norte07 - norte94).toFixed(3)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="metodo-badge metodo-gpac">GPAC</span></td>
+                                        <td>${resultadoGPAC.este07.toFixed(3)}</td>
+                                        <td>${resultadoGPAC.norte07.toFixed(3)}</td>
+                                        <td>${(resultadoGPAC.este07 - este94).toFixed(3)}</td>
+                                        <td>${(resultadoGPAC.norte07 - norte94).toFixed(3)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="diferencias">
+                            <strong>📊 Diferencia entre métodos:</strong><br>
+                            Diferencia en ESTE: ${Math.abs(diffEste).toFixed(3)} m<br>
+                            Diferencia en NORTE: ${Math.abs(diffNorte).toFixed(3)} m<br>
+                            <strong>Distancia total: ${distancia.toFixed(3)} m</strong>
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                            <strong>⚠️ Nota:</strong> El método IGN utiliza los parámetros oficiales del Instituto Geográfico Nacional.
+                            El método GPAC utiliza una fórmula de corrección local calibrada para San Juan.
+                        </div>
+                    </div>
+                `;
+                
+                console.log('Comparación completada');
+                console.log(`Diferencia entre métodos: ${distancia.toFixed(3)} m`);
+                
+            } catch (error) {
+                console.error('Error en comparación:', error);
+                document.getElementById('resultados').innerHTML = `
+                    <div class="resultados" style="border-color: #f44336; background: #ffebee;">
+                        <h2 style="color: #f44336;">❌ Error</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Ejecutar automáticamente al cargar
+        window.onload = function() {
+            console.log('Test de transformación POSGAR 94 → 2007 cargado');
+            console.log('posgar_transform.js versión 5.0');
+            ejecutarTransformacion();
+        };
+    </script>
+</body>
+</html>

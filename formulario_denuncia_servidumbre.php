@@ -26,7 +26,7 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://unpkg.com/leaflet-providers"></script>
   
   <!-- Funciones de transformación POSGAR -->
-  <script src="posgar_transform.js?v=4.0"></script>
+  <script src="posgar_transform.js?v=5.0"></script>
 
  <link href="style.css" rel="stylesheet" type="text/css" /> 
 
@@ -96,16 +96,25 @@ if (!isset($_SESSION['usuario'])) {
 <hr class="my-4" />
 <div class="container">
   <h3>Sistema de Coordenadas</h3>
-  <div class="mb-3">
-    <label for="sistema-coordenadas" class="form-label">Sistema de Referencia</label>
-    <select id="sistema-coordenadas" class="form-select" onchange="actualizarPlaceholdersServidumbre()">
-      <option value="posgar2007" selected>POSGAR 2007 (EPSG:5344) - Recomendado</option>
-      <option value="posgar94">POSGAR 94 (EPSG:22182) - Se convertirá automáticamente a POSGAR 2007 usando parámetros oficiales del IGN</option>
-    </select>
-    <small class="text-muted">
-      Si sus coordenadas están en POSGAR 94, el sistema las convertirá automáticamente a POSGAR 2007 
-      usando los parámetros oficiales del IGN (ΔX=-11.340m, ΔY=-6.686m, ΔZ=3.836m).
-    </small>
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <label for="sistema-coordenadas" class="form-label fw-bold">Sistema de Referencia</label>
+      <select id="sistema-coordenadas" class="form-select" onchange="actualizarPlaceholdersServidumbre(); toggleMetodoTransformacionServ();">
+        <option value="posgar2007" selected>POSGAR 2007 (EPSG:5344) - Recomendado</option>
+        <option value="posgar94">POSGAR 94 (EPSG:22182) - Se convertirá automáticamente a POSGAR 2007</option>
+      </select>
+      <small class="text-muted">
+        Si sus coordenadas están en POSGAR 94, el sistema las convertirá automáticamente a POSGAR 2007.
+      </small>
+    </div>
+    <div class="col-md-6" id="divMetodoTransformacionServ" style="display: none;">
+      <label class="form-label fw-bold">Método de Transformación</label>
+      <select id="metodoTransformacionServ" class="form-select">
+        <option value="GPAC" selected>GPAC - Fórmula Local San Juan (Predeterminado)</option>
+        <option value="IGN">IGN - Parámetros Oficiales (Helmert 7 parámetros)</option>
+      </select>
+      <small class="text-muted">GPAC: Gestión Provincial de Agrimensura | IGN: Método oficial del Instituto Geográfico Nacional</small>
+    </div>
   </div>
 </div>
 
@@ -568,6 +577,22 @@ function actualizarPlaceholdersServidumbre() {
   });
 }
 
+/**
+ * Muestra u oculta el selector de método de transformación según el sistema de coordenadas
+ */
+function toggleMetodoTransformacionServ() {
+  const sistema = document.getElementById('sistema-coordenadas').value;
+  const divMetodo = document.getElementById('divMetodoTransformacionServ');
+  
+  if (sistema === 'posgar94') {
+    // POSGAR 94 - Mostrar selector de método
+    divMetodo.style.display = 'block';
+  } else {
+    // POSGAR 2007 - Ocultar selector de método
+    divMetodo.style.display = 'none';
+  }
+}
+
 // Función para cambiar tipo de geometría
 function cambiarTipoGeometria() {
   const tipo = document.getElementById('selector_tipo_geometria').value;
@@ -611,8 +636,9 @@ function agregarPuntoLinea() {
       alert('Coordenadas fuera de rango para POSGAR 94.\nESTE: debe estar entre 2,000,000 y 3,000,000\nNORTE: debe estar entre 6,000,000 y 7,000,000\n\nEjemplos válidos:\nESTE: 2492382.03\nNORTE: 6677729.89');
       return;
     }
-    const convertido = convertirPOSGAR94a2007(x, y);
-    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\nESTE: ${convertido.este07.toFixed(2)}\nNORTE: ${convertido.norte07.toFixed(2)}`);
+    const metodoSeleccionado = document.getElementById('metodoTransformacionServ').value;
+    const convertido = convertirPOSGAR94a2007(x, y, metodoSeleccionado);
+    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\nMétodo: ${metodoSeleccionado}\n\nESTE: ${convertido.este07.toFixed(2)}\nNORTE: ${convertido.norte07.toFixed(2)}`);
     x = convertido.este07;
     y = convertido.norte07;
   } else {
@@ -813,8 +839,9 @@ function agregarPuntoPoligono() {
       alert('Coordenadas fuera de rango para POSGAR 94.\nESTE: debe estar entre 2,000,000 y 3,000,000\nNORTE: debe estar entre 6,000,000 y 7,000,000\n\nEjemplos válidos:\nESTE: 2492382.03\nNORTE: 6677729.89');
       return;
     }
-    const convertido = convertirPOSGAR94a2007(x, y);
-    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\nESTE: ${convertido.este07.toFixed(2)}\nNORTE: ${convertido.norte07.toFixed(2)}`);
+    const metodoSeleccionado = document.getElementById('metodoTransformacionServ').value;
+    const convertido = convertirPOSGAR94a2007(x, y, metodoSeleccionado);
+    alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\nMétodo: ${metodoSeleccionado}\n\nESTE: ${convertido.este07.toFixed(2)}\nNORTE: ${convertido.norte07.toFixed(2)}`);
     x = convertido.este07;
     y = convertido.norte07;
   } else {
@@ -1183,8 +1210,9 @@ document.getElementById("fileInput").addEventListener("change", function(e) {
           coords = ent.vertices.map(v => [v.x, v.y]); // EPSG:22182 para enviar al backend
           
           // Convertir POSGAR 94 (22182) a POSGAR 2007 (5344)
+          const metodoSeleccionado = document.getElementById('metodoTransformacionServ').value;
           const coordsConvertidas = coords.map(c => {
-            const convertido = convertirPOSGAR94a2007(c[0], c[1]);
+            const convertido = convertirPOSGAR94a2007(c[0], c[1], metodoSeleccionado);
             return [convertido.este07, convertido.norte07];
           });
           

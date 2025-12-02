@@ -22,7 +22,7 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://unpkg.com/leaflet-providers"></script>
   
   <!-- Funciones de transformación POSGAR -->
-  <script src="posgar_transform.js?v=4.0"></script>
+  <script src="posgar_transform.js?v=5.0"></script>
 
   <link href="style.css" rel="stylesheet" type="text/css" /> 
        
@@ -267,14 +267,22 @@ if (!isset($_SESSION['usuario'])) {
       <hr class="my-4" />
 <fieldset>
   <!-- Selector de Sistema de Coordenadas -->
-  <div class="row mb-3">
+  <div class="row g-3 mb-3">
     <div class="col-md-6">
       <label class="form-label fw-bold">Sistema de Coordenadas</label>
-      <select id="sistema-coordenadas" class="form-select" onchange="actualizarEtiquetasCoordenadas()">
+      <select id="sistema-coordenadas" class="form-select" onchange="actualizarEtiquetasCoordenadas(); toggleMetodoTransformacionCanteras();">
         <option value="posgar2007" selected>POSGAR 2007 (EPSG:5344) - Por defecto</option>
         <option value="posgar94">POSGAR 94 (EPSG:22182) - Se transformará a POSGAR 2007</option>
       </select>
       <small class="text-muted">Seleccione el sistema en el que ingresará las coordenadas</small>
+    </div>
+    <div class="col-md-6" id="divMetodoTransformacionCanteras" style="display: none;">
+      <label class="form-label fw-bold">Método de Transformación</label>
+      <select id="metodoTransformacionCanteras" class="form-select">
+        <option value="GPAC" selected>GPAC - Fórmula Local San Juan (Predeterminado)</option>
+        <option value="IGN">IGN - Parámetros Oficiales (Helmert 7 parámetros)</option>
+      </select>
+      <small class="text-muted">GPAC: Gestión Provincial de Agrimensura | IGN: Método oficial del Instituto Geográfico Nacional</small>
     </div>
   </div>
   
@@ -409,13 +417,47 @@ if (!isset($_SESSION['usuario'])) {
 
     //proj4.defs("EPSG:22182", "+proj=tmerc +lat_0=-90 +lon_0=-69 +k=1 +x_0=2500000 +y_0=0 +ellps=WGS84 +units=m +no_defs");
     const fromProjection = proj4("EPSG:22182");
-    const toProjection = proj4("WGS84");   
+    const toProjection = proj4("WGS84");
+
+    /**
+     * Actualiza las etiquetas según el sistema de coordenadas seleccionado
+     */
+    function actualizarEtiquetasCoordenadas() {
+      const sistema = document.getElementById('sistema-coordenadas').value;
+      const legend = document.getElementById('legend-coordenadas');
+      const infoSistema = document.getElementById('info-sistema');
+      
+      if (sistema === 'posgar2007') {
+        if (legend) legend.textContent = 'Ingresar Coordenadas Gauss Krüger Faja 2 POSGAR 2007 (EPSG:5344)';
+        if (infoSistema) infoSistema.style.display = 'none';
+      } else {
+        if (legend) legend.textContent = 'Ingresar Coordenadas Gauss Krüger Faja 2 POSGAR 94 (EPSG:22182)';
+        if (infoSistema) infoSistema.style.display = 'block';
+      }
+    }
+
+    /**
+     * Muestra u oculta el selector de método de transformación según el sistema de coordenadas
+     */
+    function toggleMetodoTransformacionCanteras() {
+      const sistema = document.getElementById('sistema-coordenadas').value;
+      const divMetodo = document.getElementById('divMetodoTransformacionCanteras');
+      
+      if (sistema === 'posgar94') {
+        // POSGAR 94 - Mostrar selector de método
+        divMetodo.style.display = 'block';
+      } else {
+        // POSGAR 2007 - Ocultar selector de método
+        divMetodo.style.display = 'none';
+      }
+    }
 
     function agregarPunto() {
+      const sistema = document.getElementById('sistema-coordenadas').value;
       const ix = document.getElementById("x");
       const iy = document.getElementById("y");
-      const x = parseFloat(ix.value);
-      const y = parseFloat(iy.value);
+      let x = parseFloat(ix.value);
+      let y = parseFloat(iy.value);
       
       if (isNaN(x) || isNaN(y)) {
         alert("Por favor ingresa valores válidos para ESTE y NORTE");
@@ -434,6 +476,15 @@ if (!isset($_SESSION['usuario'])) {
         alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
         ix.focus();
         return;
+      }
+
+      // Convertir si es POSGAR 94
+      if (sistema === 'posgar94') {
+        const metodoSeleccionado = document.getElementById('metodoTransformacionCanteras').value;
+        const convertido = convertirPOSGAR94a2007(y, x, metodoSeleccionado);
+        y = convertido.este07;
+        x = convertido.norte07;
+        alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\nMétodo: ${metodoSeleccionado}\n\nESTE: ${y.toFixed(2)}\nNORTE: ${x.toFixed(2)}`);
       }
 
       puntos.push({x, y, z: 0});

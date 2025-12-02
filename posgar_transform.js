@@ -1,14 +1,22 @@
 /**
  * POSGAR 94 -> POSGAR 2007 Transformation
- * Utiliza parámetros oficiales del IGN (Instituto Geográfico Nacional)
  * 
- * Parámetros Helmert 7 parámetros:
- * - Traslación (metros): dx=-11.340, dy=-6.686, dz=3.836
- * - Rotación (arc-seconds): rx=0.214569, ry=-0.102025, rz=0.374988
- * - Factor de escala (ppm): ds=0.121173600
+ * Métodos disponibles:
  * 
- * Fuente: IGN Argentina - Marco de Referencia Geodésico Nacional
- * Versión: 2025-11-26
+ * 1. IGN (Instituto Geográfico Nacional)
+ *    - Utiliza transformación Helmert de 7 parámetros
+ *    - Parámetros: dx=-11.340, dy=-6.686, dz=3.836
+ *    - Rotación (arc-seconds): rx=0.214569, ry=-0.102025, rz=0.374988
+ *    - Factor de escala (ppm): ds=0.121173600
+ *    - Fuente: IGN Argentina - Marco de Referencia Geodésico Nacional
+ * 
+ * 2. GPAC (Gestión Provincial de Agrimensura y Catastro)
+ *    - Utiliza fórmula de corrección local para San Juan
+ *    - ESTE_07 = ESTE_94 + 1.6349059209 + (-2.016e-7 * NORTE_94)
+ *    - NORTE_07 = NORTE_94 + 0.0947941194 + (2.213e-7 * ESTE_94)
+ * 
+ * Versión: 5.0
+ * Fecha: 2025-12-01
  */
 
 // Definir sistemas de coordenadas una sola vez
@@ -46,7 +54,7 @@
  * @param {number} norte94 - Coordenada Norte en POSGAR 94 Faja 2 (EPSG:22182)
  * @returns {Object} Objeto con coordenadas convertidas: {este07, norte07, diferencias}
  */
-function convertirPOSGAR94a2007(este94, norte94) {
+function convertirPOSGAR94a2007_IGN(este94, norte94) {
     try {
         // Validar entrada
         if (isNaN(este94) || isNaN(norte94)) {
@@ -61,17 +69,17 @@ function convertirPOSGAR94a2007(este94, norte94) {
             console.warn('Coordenada NORTE fuera de rango esperado para San Juan');
         }
         
-        console.log(`[POSGAR Transform] Inicio: POSGAR 94 (${este94.toFixed(2)}, ${norte94.toFixed(2)})`);
+        console.log(`[POSGAR Transform IGN] Inicio: POSGAR 94 (${este94.toFixed(2)}, ${norte94.toFixed(2)})`);
         
         // Transformación directa POSGAR 94 → POSGAR 2007
         // proj4 aplica automáticamente los parámetros towgs84 definidos en EPSG:22182
         const [este07, norte07] = proj4('EPSG:22182', 'EPSG:5344', [este94, norte94]);
-        console.log(`[POSGAR Transform] Resultado: POSGAR 2007 (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
+        console.log(`[POSGAR Transform IGN] Resultado: POSGAR 2007 (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
         
         // Calcular diferencias
         const diffEste = este07 - este94;
         const diffNorte = norte07 - norte94;
-        console.log(`[POSGAR Transform] Diferencias: ΔE=${diffEste.toFixed(3)}m, ΔN=${diffNorte.toFixed(3)}m`);
+        console.log(`[POSGAR Transform IGN] Diferencias: ΔE=${diffEste.toFixed(3)}m, ΔN=${diffNorte.toFixed(3)}m`);
         
         return {
             este07: este07,
@@ -83,8 +91,85 @@ function convertirPOSGAR94a2007(este94, norte94) {
         };
         
     } catch (error) {
-        console.error('[POSGAR Transform] Error en conversión:', error);
+        console.error('[POSGAR Transform IGN] Error en conversión:', error);
         throw error;
+    }
+}
+
+/**
+ * Convierte coordenadas de POSGAR 94 a POSGAR 2007
+ * utilizando los parámetros de transformación GPAC (Gestión Provincial de Agrimensura y Catastro)
+ * 
+ * Fórmula GPAC:
+ * - ESTE_07 = ESTE_94 + 1.6349059209 + (-2.016e-7 * NORTE_94)
+ * - NORTE_07 = NORTE_94 + 0.0947941194 + (2.213e-7 * ESTE_94)
+ * 
+ * @param {number} este94 - Coordenada Este en POSGAR 94 Faja 2
+ * @param {number} norte94 - Coordenada Norte en POSGAR 94 Faja 2
+ * @returns {Object} Objeto con coordenadas convertidas: {este07, norte07, diferencias}
+ */
+function convertirPOSGAR94a2007_GPAC(este94, norte94) {
+    try {
+        // Validar entrada
+        if (isNaN(este94) || isNaN(norte94)) {
+            throw new Error('Las coordenadas deben ser números válidos');
+        }
+        
+        // Validar rangos razonables para San Juan
+        if (este94 < 2000000 || este94 > 3000000) {
+            console.warn('Coordenada ESTE fuera de rango esperado para San Juan');
+        }
+        if (norte94 < 6000000 || norte94 > 7000000) {
+            console.warn('Coordenada NORTE fuera de rango esperado para San Juan');
+        }
+        
+        console.log(`[POSGAR Transform GPAC] Inicio: POSGAR 94 (${este94.toFixed(2)}, ${norte94.toFixed(2)})`);
+        
+        // Aplicar fórmula GPAC
+        const este07 = este94 + 1.6349059209 + (-2.016e-7 * norte94);
+        const norte07 = norte94 + 0.0947941194 + (2.213e-7 * este94);
+        
+        console.log(`[POSGAR Transform GPAC] Resultado: POSGAR 2007 (${este07.toFixed(2)}, ${norte07.toFixed(2)})`);
+        
+        // Calcular diferencias
+        const diffEste = este07 - este94;
+        const diffNorte = norte07 - norte94;
+        console.log(`[POSGAR Transform GPAC] Diferencias: ΔE=${diffEste.toFixed(3)}m, ΔN=${diffNorte.toFixed(3)}m`);
+        
+        return {
+            este07: este07,
+            norte07: norte07,
+            diferencias: {
+                este: Math.abs(diffEste),
+                norte: Math.abs(diffNorte)
+            }
+        };
+        
+    } catch (error) {
+        console.error('[POSGAR Transform GPAC] Error en conversión:', error);
+        throw error;
+    }
+}
+
+/**
+ * Función principal de conversión que permite elegir el método
+ * 
+ * @param {number} este94 - Coordenada Este en POSGAR 94 Faja 2
+ * @param {number} norte94 - Coordenada Norte en POSGAR 94 Faja 2
+ * @param {string} metodo - Método de transformación: 'IGN' o 'GPAC' (por defecto 'IGN')
+ * @returns {Object} Objeto con coordenadas convertidas: {este07, norte07, diferencias, metodo}
+ */
+function convertirPOSGAR94a2007(este94, norte94, metodo = 'GPAC') {
+    metodo = metodo.toUpperCase();
+    
+    if (metodo === 'IGN') {
+        const resultado = convertirPOSGAR94a2007_IGN(este94, norte94);
+        resultado.metodo = 'IGN';
+        return resultado;
+    } else {
+        const resultado = convertirPOSGAR94a2007_GPAC(este94, norte94);
+        resultado.metodo = 'GPAC';
+        return resultado;
     }
 }
 

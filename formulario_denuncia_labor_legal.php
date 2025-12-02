@@ -21,7 +21,7 @@ if (!isset($_SESSION['usuario'])) {
   <script src="https://unpkg.com/leaflet-providers"></script>
   
   <!-- Funciones de transformación POSGAR -->
-  <script src="posgar_transform.js?v=4.0"></script>
+  <script src="posgar_transform.js?v=5.0"></script>
 
   <link href="style.css" rel="stylesheet" type="text/css" /> 
 
@@ -272,13 +272,21 @@ if (!isset($_SESSION['usuario'])) {
   
   <!-- Selector de Sistema de Coordenadas -->
   <div class="row g-3 mb-3">
-    <div class="col-md-12">
+    <div class="col-md-6">
       <label class="form-label fw-bold">Sistema de Coordenadas de Entrada</label>
-      <select id="sistemaCoordenadasLabor" class="form-select" onchange="actualizarPlaceholdersLabor()">
+      <select id="sistemaCoordenadasLabor" class="form-select" onchange="actualizarPlaceholdersLabor(); toggleMetodoTransformacion();">
         <option value="5344">POSGAR 2007 (EPSG:5344) - Recomendado</option>
         <option value="22182">POSGAR 94 (EPSG:22182) - Se convertirá automáticamente</option>
       </select>
-      <small class="text-muted">Si sus coordenadas están en POSGAR 94, se convertirán automáticamente a POSGAR 2007 usando los parámetros oficiales del IGN.</small>
+      <small class="text-muted">Si sus coordenadas están en POSGAR 94, se convertirán automáticamente a POSGAR 2007.</small>
+    </div>
+    <div class="col-md-6" id="divMetodoTransformacion" style="display: none;">
+      <label class="form-label fw-bold">Método de Transformación</label>
+      <select id="metodoTransformacion" class="form-select">
+        <option value="GPAC" selected>GPAC - Fórmula Local San Juan (Predeterminado)</option>
+        <option value="IGN">IGN - Parámetros Oficiales (Helmert 7 parámetros)</option>
+      </select>
+      <small class="text-muted">GPAC: Gestión Provincial de Agrimensura | IGN: Método oficial del Instituto Geográfico Nacional</small>
     </div>
   </div>
   
@@ -408,6 +416,22 @@ if (!isset($_SESSION['usuario'])) {
       }
     }
 
+    /**
+     * Muestra u oculta el selector de método de transformación según el sistema de coordenadas
+     */
+    function toggleMetodoTransformacion() {
+      const sistema = document.getElementById('sistemaCoordenadasLabor').value;
+      const divMetodo = document.getElementById('divMetodoTransformacion');
+      
+      if (sistema === '22182') {
+        // POSGAR 94 - Mostrar selector de método
+        divMetodo.style.display = 'block';
+      } else {
+        // POSGAR 2007 - Ocultar selector de método
+        divMetodo.style.display = 'none';
+      }
+    }
+
     function agregarPuntoUnico() {
       let muestra_x = parseFloat(document.getElementById("muestra_x").value);
       let muestra_y = parseFloat(document.getElementById("muestra_y").value);
@@ -437,9 +461,10 @@ if (!isset($_SESSION['usuario'])) {
           return;
         }
         
-        // Convertir usando función centralizada
+        // Convertir usando función centralizada con método seleccionado
         try {
-          const resultado = convertirPOSGAR94a2007(muestra_x, muestra_y);
+          const metodoSeleccionado = document.getElementById("metodoTransformacion").value;
+          const resultado = convertirPOSGAR94a2007(muestra_x, muestra_y, metodoSeleccionado);
           
           // Actualizar valores a POSGAR 2007
           muestra_x = resultado.este07;
@@ -450,7 +475,8 @@ if (!isset($_SESSION['usuario'])) {
           document.getElementById("muestra_y").value = muestra_y.toFixed(2);
           
           // Mostrar mensaje informativo con diferencias
-          alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n\n` +
+          alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\n` +
+                `Método: ${metodoSeleccionado}\n\n` +
                 `ESTE: ${muestra_x.toFixed(2)} (Δ=${resultado.diferencias.este.toFixed(3)}m)\n` +
                 `NORTE: ${muestra_y.toFixed(2)} (Δ=${resultado.diferencias.norte.toFixed(3)}m)\n\n` +
                 `Las coordenadas se guardarán en POSGAR 2007.`);
