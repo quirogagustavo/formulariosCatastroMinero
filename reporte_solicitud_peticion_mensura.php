@@ -127,7 +127,11 @@ if (!$result) {
             <td>
             <?php
             $expediente = $row['expte_siged'];
-            $titular_sql = "SELECT solicitante, cuit FROM registro_grafico.tbl_solicitantes WHERE expediente = $1 AND formulario = 'SOLICITUD DE PETICION DE MENSURA'";
+            $titular_sql = "SELECT solicitante, cuit
+                               FROM registro_grafico.tbl_solicitantes
+                              WHERE expediente = $1
+                                AND (trim(coalesce(formulario,'')) = ''
+                                     OR trim(formulario) ILIKE 'SOLICITUD DE PETICION DE MENSURA')";
             $titular_result = pg_query_params($conn, $titular_sql, [$expediente]);
 
                 if ($titular_result && pg_num_rows($titular_result) > 0) {
@@ -158,23 +162,26 @@ if (!$result) {
             <td>
            <?php
             $mineral_sql = "SELECT tm.detalle
-                                FROM registro_grafico.tbl_formulario_minerales fm
-                                JOIN tipo_minerales tm 
-                                ON fm.id_mineral = tm.id_mineral
-                                WHERE fm.expediente = $1 
-                                AND fm.formulario = 'SOLICITUD DE PETICION DE MENSURA'";
+                               FROM registro_grafico.tbl_formulario_minerales fm
+                               JOIN tipo_minerales tm ON fm.id_mineral = tm.id_mineral
+                              WHERE fm.expediente = $1
+                                AND (trim(coalesce(fm.formulario,'')) = ''
+                                     OR trim(fm.formulario) ILIKE 'SOLICITUD DE PETICION DE MENSURA')";
 
                 $mineral_result = pg_query_params($conn, $mineral_sql, [$expediente]);
 
             if ($mineral_result && pg_num_rows($mineral_result) > 0) {
-            $detalles = [];
-            while ($mineral = pg_fetch_assoc($mineral_result)) {
-                    $detalles[] = htmlspecialchars($mineral['detalle']);
-                    }
-                echo implode(", ", $detalles);
-                pg_free_result($mineral_result);
+              $detalles = [];
+              while ($mineral = pg_fetch_assoc($mineral_result)) {
+                $detalles[] = htmlspecialchars($mineral['detalle']);
+              }
+              echo implode(", ", $detalles);
+              pg_free_result($mineral_result);
+            } elseif (!empty($row['minerales'])) {
+              // Fallback: usar campo "minerales" de gra_cm_mensura_area_pga07 si no hay registros en tbl_formulario_minerales
+              echo htmlspecialchars($row['minerales']);
             } else {
-                echo "No disponible";
+              echo "No disponible";
             }
             ?>
            </td>
@@ -228,6 +235,7 @@ if ($busqueda_expte !== '') {
         FROM registro_grafico.gra_cm_labores_legales_pga07 t
         JOIN LATERAL ST_DumpPoints(t.geom) AS dp ON true
         WHERE t.expte_siged ILIKE $1
+          AND t.fecha_baja IS NULL
         GROUP BY t.expte_siged, t.geom, t.ll_id
         ORDER BY t.expte_siged, t.ll_id
     ";
@@ -256,18 +264,19 @@ if ($busqueda_expte !== '') {
     $sql2 = "
          SELECT 
             t.expte_siged,
-            t.id_pol,
+            t.id_pol::text,
             ST_Area(t.geom) / 10000 as sup_reg_ha,
             t.sup_decla_men_ha,
             t.mens_id,
-            t.id_pert,
+            t.id_pert::text,
             array_to_json(ARRAY(
                 SELECT json_build_object('x', ST_Y(geom), 'y', ST_X(geom))
                 FROM ST_DumpPoints(ST_ExteriorRing(t.geom))
             )) as vertices
         FROM registro_grafico.gra_cm_mensura_pertenencias_pga07 t
         WHERE t.expte_siged ILIKE $1
-        ORDER BY t.mens_id ASC, t.id_pert ASC
+          AND t.fecha_baja IS NULL
+        ORDER BY t.mens_id ASC, t.id_pert::text ASC
     ";
 
     $result1 = pg_query_params($conn, $sql1, $params);

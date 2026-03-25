@@ -193,7 +193,7 @@ function validarCoordenadasPOSGAR94(este, norte) {
     if (este < 2000000 || este >= 3000000) {
         return {
             valido: false,
-            mensaje: '⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2513614.40'
+            mensaje: '⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2513614.40'
         };
     }
     
@@ -201,7 +201,7 @@ function validarCoordenadasPOSGAR94(este, norte) {
     if (norte < 6000000 || norte >= 7000000) {
         return {
             valido: false,
-            mensaje: '⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6596573.50'
+            mensaje: '⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6596573.50'
         };
     }
     
@@ -231,7 +231,7 @@ function validarCoordenadasPOSGAR2007(este, norte) {
     if (este < 2000000 || este >= 3000000) {
         return {
             valido: false,
-            mensaje: '⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2513614.71'
+            mensaje: '⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2513614.71'
         };
     }
     
@@ -239,7 +239,7 @@ function validarCoordenadasPOSGAR2007(este, norte) {
     if (norte < 6000000 || norte >= 7000000) {
         return {
             valido: false,
-            mensaje: '⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6596570.58'
+            mensaje: '⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6596570.58'
         };
     }
     

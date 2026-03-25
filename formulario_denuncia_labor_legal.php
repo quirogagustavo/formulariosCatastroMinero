@@ -295,11 +295,11 @@ if (!isset($_SESSION['usuario'])) {
     
     <legend class="h5">INGRESO DE COORDENADAS LA LABOR LEGAL</legend>
     <div class="col-md-4">
-      <label class="form-label">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+      <label class="form-label">X (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
       <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
     </div>
     <div class="col-md-4">
-      <label class="form-label">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+      <label class="form-label">Y (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
       <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
     </div>
     <div class="col-md-4">
@@ -615,23 +615,21 @@ function eliminarUltimoPuntoUnico(event) {
         
         // 2. Verificar si el primer punto es el noroeste
         if (puntoNoroeste !== 0) {
-            if (confirm(`⚠️ ADVERTENCIA: El primer punto no es el más al NOROESTE.\n\nEl punto más al noroeste está en la posición ${puntoNoroeste + 1}:\n` +
-                       `ESTE: ${puntos[puntoNoroeste].x}, NORTE: ${puntos[puntoNoroeste].y}\n\n` +
-                       `¿Desea reordenar automáticamente los puntos comenzando desde el noroeste?`)) {
-                reordenarDesdePuntoNoroeste(puntoNoroeste);
-                return false;
-            }
+          if (confirm(`⚠️ ADVERTENCIA: El primer punto no es el más al NOROESTE.\n\nEl punto más al noroeste está en la posición ${puntoNoroeste + 1}:\n` +
+                 `ESTE: ${puntos[puntoNoroeste].x}, NORTE: ${puntos[puntoNoroeste].y}\n\n` +
+                 `¿Desea reordenar automáticamente los puntos comenzando desde el noroeste y continuar con el envío?`)) {
+            reordenarDesdePuntoNoroeste(puntoNoroeste);
+          }
         }
         
         // 3. Verificar orientación horaria
         const area = calcularAreaConSigno(puntos);
         if (area > 0) {
-            if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
-                       `Los vértices deben seguir el sentido de las manecillas del reloj.\n\n` +
-                       `¿Desea invertir automáticamente el orden de los puntos?`)) {
-                invertirOrdenPuntos();
-                return false;
-            }
+          if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
+                 `Los vértices deben seguir el sentido de las manecillas del reloj.\n\n` +
+                 `¿Desea invertir automáticamente el orden de los puntos y continuar con el envío?`)) {
+            invertirOrdenPuntos();
+          }
         }
         
         return true;

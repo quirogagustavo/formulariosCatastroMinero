@@ -55,9 +55,9 @@ try {
             LIMIT 1
         )
         SELECT 
-            ST_Contains(geom_original, ST_SetSRID(ST_MakePoint($1, $2), 5344)) as dentro_limite,
-            ST_Contains(geom_expandida, ST_SetSRID(ST_MakePoint($1, $2), 5344)) as dentro_zona_tolerancia,
-            ST_Distance(geom_original, ST_SetSRID(ST_MakePoint($1, $2), 5344)) as distancia_metros
+            ST_Contains(geom_original, ST_SetSRID(ST_MakePoint($2, $1), 5344)) as dentro_limite,
+            ST_Contains(geom_expandida, ST_SetSRID(ST_MakePoint($2, $1), 5344)) as dentro_zona_tolerancia,
+            ST_Distance(geom_original, ST_SetSRID(ST_MakePoint($2, $1), 5344)) as distancia_metros
         FROM limite_expandido
     ";
     

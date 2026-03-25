@@ -7,7 +7,8 @@ error_reporting(E_ALL);*/
 include 'conectar_bd.php';
 
 // Asegurate de que el SRID sea correcto (EPSG:22182)
-$sql = "SELECT mens_id, ST_AsGeoJSON(ST_Transform(geom, 4326)) as geojson, denominacion, expte_siged FROM registro_grafico.vw_mensuras_pertenencias WHERE geom IS NOT NULL";
+// Solo mostrar registros sin fecha de baja (fecha_baja IS NULL)
+$sql = "SELECT mens_id, ST_AsGeoJSON(ST_Transform(geom, 4326)) as geojson, denominacion, expte_siged FROM registro_grafico.vw_mensuras_pertenencias WHERE geom IS NOT NULL AND fecha_baja IS NULL";
 
 $res = pg_query($conn, $sql);
 $features = [];

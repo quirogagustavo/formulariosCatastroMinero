@@ -180,14 +180,14 @@ if (!isset($_SESSION['usuario'])) {
   
   <div class="row g-3 align-items-end">
     <div class="col-md-4">
-      <label class="form-label fw-bold">X (ESTE)</label>
+      <label class="form-label fw-bold">X (NORTE)</label>
       <input type="number" id="x" class="form-control" required step="0.01" min="0" placeholder="0.00" onblur="validarCoordenadaEnTiempoReal()">
-      <small class="text-muted">Debe comenzar con 2</small>
+      <small class="text-muted">Debe comenzar con 6</small>
     </div>
     <div class="col-md-4">
-      <label class="form-label fw-bold">Y (NORTE)</label>
+      <label class="form-label fw-bold">Y (ESTE)</label>
       <input type="number" id="y" class="form-control" required step="0.01" min="0" placeholder="0.00" onblur="validarCoordenadaEnTiempoReal()">
-      <small class="text-muted">Debe comenzar con 6</small>
+      <small class="text-muted">Debe comenzar con 2</small>
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -223,8 +223,8 @@ if (!isset($_SESSION['usuario'])) {
             <thead class="table-dark">
               <tr>
                 <th class="text-center">Vértice</th>
-                <th>NORTE (Y)</th>
-                <th>ESTE (X)</th>
+                <th>NORTE (X)</th>
+                <th>ESTE (Y)</th>
                 <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
@@ -351,20 +351,20 @@ if (!isset($_SESSION['usuario'])) {
       let y = parseFloat(iy.value);
       
       if (isNaN(x) || isNaN(y)) {
-        alert("Por favor ingresa valores válidos para ESTE y NORTE");
+        alert("Por favor ingresa valores válidos para NORTE (X) y ESTE (Y)");
         return;
       }
 
-      // Validar que X (ESTE) comience con 2 (rango 2000000-2999999)
+      // Validar que Y (ESTE) comience con 2 (rango 2000000-2999999)
       if (y < 2000000 || y >= 3000000) {
-        alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
+        alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
         iy.focus();
         return;
       }
 
-      // Validar que Y (NORTE) comience con 6 (rango 6000000-6999999)
+      // Validar que X (NORTE) comience con 6 (rango 6000000-6999999)
       if (x < 6000000 || x >= 7000000) {
-        alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
+        alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
         ix.focus();
         return;
       }
@@ -379,6 +379,7 @@ if (!isset($_SESSION['usuario'])) {
       }
 
       // Validar el punto con el nuevo sistema
+      // Importante: validar_punto.php espera (X=ESTE, Y=NORTE)
       validarPuntoDentroLimite(x, y, function(valido, color, estado) {
         if (valido) {
           // Punto válido - agregar a la lista con información de estado
@@ -406,8 +407,10 @@ if (!isset($_SESSION['usuario'])) {
 
       // Realizar petición AJAX
       const formData = new FormData();
-      formData.append('x', x);
-      formData.append('y', y);
+      // validar_punto.php usa ST_MakePoint($1,$2) como (ESTE, NORTE)
+      // En este formulario manejamos x=NORTE, y=ESTE, por eso se envían invertidos
+      formData.append('x', y); // ESTE
+      formData.append('y', x); // NORTE
 
       fetch('validar_punto.php', {
         method: 'POST',
@@ -463,8 +466,9 @@ if (!isset($_SESSION['usuario'])) {
 
     function validarPuntoDentroLimiteSilencioso(x, y, callback) {
       const formData = new FormData();
-      formData.append('x', x);
-      formData.append('y', y);
+      // Envío en orden (ESTE, NORTE) para validar_punto.php
+      formData.append('x', y); // ESTE
+      formData.append('y', x); // NORTE
 
       fetch('validar_punto.php', {
         method: 'POST',
@@ -568,10 +572,8 @@ if (!isset($_SESSION['usuario'])) {
        if (!validarCategorias()) return false;
        if (!validarPrograma()) return false;
        
-       // Validar secuencia horaria de puntos
-       if (!validarSecuenciaHoraria()) {
-           return false;
-       }
+         // Validar secuencia horaria de puntos (no bloqueante)
+         validarSecuenciaHoraria();
       
       if (puntos.length < 3) {
         alert("Debe agregar al menos 3 puntos para formar un polígono.");
@@ -587,14 +589,13 @@ if (!isset($_SESSION['usuario'])) {
         
         // Para 4 puntos, verificar si están en el orden correcto: V3→V1→V4→V2
         if (puntos.length === 4) {
-            if (confirm(`⚠️ POLÍGONO DE 4 PUNTOS DETECTADO:\n\n` +
-                       `Para evitar la forma de "reloj de arena", el orden correcto debe ser:\n` +
-                       `V3 → V1 → V4 → V2\n\n` +
-                       `¿Desea aplicar automáticamente el orden correcto?`)) {
-                corregirSecuenciaCompleta();
-                return false;
-            }
-            return true;
+          if (confirm(`⚠️ POLÍGONO DE 4 PUNTOS DETECTADO:\n\n` +
+                 `Para evitar la forma de "reloj de arena", el orden correcto debe ser:\n` +
+                 `V3 → V1 → V4 → V2\n\n` +
+                 `¿Desea aplicar automáticamente el orden correcto y continuar con el envío?`)) {
+            corregirSecuenciaCompleta();
+          }
+          return true;
         }
         
         // Para otros casos, usar validación original
@@ -610,23 +611,21 @@ if (!isset($_SESSION['usuario'])) {
         
         // 2. Verificar si el primer punto es el noroeste
         if (puntoNoroeste !== 0) {
-            if (confirm(`⚠️ ADVERTENCIA: El primer punto no es el más al NOROESTE.\n\nEl punto más al noroeste está en la posición ${puntoNoroeste + 1}:\n` +
-                       `ESTE: ${puntos[puntoNoroeste].x}, NORTE: ${puntos[puntoNoroeste].y}\n\n` +
-                       `¿Desea reordenar automáticamente los puntos comenzando desde el noroeste?`)) {
-                reordenarDesdePuntoNoroeste(puntoNoroeste);
-                return false;
-            }
+          if (confirm(`⚠️ ADVERTENCIA: El primer punto no es el más al NOROESTE.\n\nEl punto más al noroeste está en la posición ${puntoNoroeste + 1}:\n` +
+                 `ESTE: ${puntos[puntoNoroeste].x}, NORTE: ${puntos[puntoNoroeste].y}\n\n` +
+                 `¿Desea reordenar automáticamente los puntos comenzando desde el noroeste y continuar con el envío?`)) {
+            reordenarDesdePuntoNoroeste(puntoNoroeste);
+          }
         }
         
         // 3. Verificar orientación horaria
         const area = calcularAreaConSigno(puntos);
         if (area > 0) {
-            if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
-                       `Los vértices deben seguir el sentido HORARIO (como las manecillas del reloj).\n\n` +
-                       `¿Desea invertir automáticamente el orden de los puntos?`)) {
-                invertirOrdenPuntos();
-                return false;
-            }
+          if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
+                 `Los vértices deben seguir el sentido HORARIO (como las manecillas del reloj).\n\n` +
+                 `¿Desea invertir automáticamente el orden de los puntos y continuar con el envío?`)) {
+            invertirOrdenPuntos();
+          }
         }
         
         return true;
@@ -716,15 +715,6 @@ if (!isset($_SESSION['usuario'])) {
                 </td>
             `;
             tbody.appendChild(tr);
-        });
-    }
-            }
-            
-            if (index === 0) {
-                li.style.fontWeight = "bold";
-                li.textContent += " (NOROESTE)";
-            }
-            lista.appendChild(li);
         });
     }
     

@@ -125,10 +125,17 @@ if (!isset($_SESSION['usuario'])) {
           </select>
         </div>
 
+        <div class="col-12 mt-2" id="descripcion_yacimiento_container" style="display:none;">
+          <label class="form-label">Describa el tipo de yacimiento (si seleccionó "Otros")</label>
+          <input type="text" name="descripcion_tipo_yacimiento" class="form-control" placeholder="Ingrese una breve descripción del tipo de yacimiento">
+        </div>
+
        
   <div class="col-12">
-  <label class="form-label">Minerales Descubiertos <small>Puede seleccionar múltiples minerales con tecla control</small></label>
-  <select name="minerales[]" class="form-select" multiple required>
+  <label class="form-label">Minerales Descubiertos</label>
+  <input type="text" id="buscador_minerales" class="form-control mb-2" placeholder="Buscar mineral...">
+  <small class="text-muted d-block mb-1">Puede seleccionar múltiples minerales con Ctrl (Windows/Linux) o ⌘ (Mac).</small>
+  <select name="minerales[]" id="minerales_select" class="form-select" multiple required>
     <!-- Opciones de minerales -->
     <option value="1">Oro</option>
     <option value="2">Plata</option>
@@ -300,12 +307,12 @@ if (!isset($_SESSION['usuario'])) {
     
     <legend class="h5">LUGAR DE EXTRACCIÓN MUESTRA</legend>
     <div class="col-md-4">
-      <label class="form-label fw-bold">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
-      <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
+      <label class="form-label fw-bold">X (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+      <input type="number" name="muestra_x" id="muestra_x" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
     </div>
     <div class="col-md-4">
-      <label class="form-label fw-bold">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
-      <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
+      <label class="form-label fw-bold">Y (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+      <input type="number" name="muestra_y" id="muestra_y" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -321,12 +328,12 @@ if (!isset($_SESSION['usuario'])) {
     
     <legend class="h5">AREA DE RECONOCIMIENTO</legend>
     <div class="col-md-4">
-      <label class="form-label fw-bold">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
-      <input type="number" id="x" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
+      <label class="form-label fw-bold">X (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+      <input type="number" id="x" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
     </div>
     <div class="col-md-4">
-      <label class="form-label fw-bold">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
-      <input type="number" id="y" class="form-control" required step="0.01" placeholder="Ejemplo: 6677723.20">
+      <label class="form-label fw-bold">Y (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+      <input type="number" id="y" class="form-control" required step="0.01" placeholder="Ejemplo: 2492370.69">
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -336,6 +343,9 @@ if (!isset($_SESSION['usuario'])) {
       <div class="d-flex gap-2 mt-2">
         <button type="button" onclick="validarSecuenciaManual()" class="btn btn-info btn-sm flex-fill">🔍 Validar Secuencia</button>
         <button type="button" onclick="corregirSecuenciaCompleta()" class="btn btn-warning btn-sm flex-fill">🔧 Corregir Orden</button>
+      </div>
+      <div class="d-flex gap-2 mt-2">
+        <button type="button" id="btnFinalizarCoordenadas" onclick="toggleBloqueoCoordenadas()" class="btn btn-secondary btn-sm w-100">Finalizar ingreso de coordenadas</button>
       </div>
     </div>
   </div>
@@ -355,8 +365,8 @@ if (!isset($_SESSION['usuario'])) {
             <thead class="table-dark">
               <tr>
                 <th class="text-center">Vértice</th>
-                <th>ESTE (X)</th>
-                <th>NORTE (Y)</th>
+                <th>NORTE (X)</th>
+                <th>ESTE (Y)</th>
                 <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
@@ -367,10 +377,11 @@ if (!isset($_SESSION['usuario'])) {
         </div>
       </div>
       
-      <div id="map"></div>
-
       
   </div>
+  
+      <div id="map"></div>
+
       <input type="hidden" name="nroexpediente_usado">
 
       <br>
@@ -443,7 +454,34 @@ if (!isset($_SESSION['usuario'])) {
   <script src="expediente.js"></script>
   <script src="solicitante.js"></script>
   <script>
+    // Inicializar buscador y ordenación alfabética de minerales
+    document.addEventListener('DOMContentLoaded', function() {
+      const selectMinerales = document.getElementById('minerales_select');
+      const buscador = document.getElementById('buscador_minerales');
+
+      if (selectMinerales) {
+        // Ordenar opciones alfabéticamente por texto manteniendo el value
+        const opciones = Array.from(selectMinerales.options);
+        opciones.sort(function(a, b) {
+          return a.text.localeCompare(b.text, 'es', { sensitivity: 'base' });
+        });
+        selectMinerales.innerHTML = '';
+        opciones.forEach(function(opt) { selectMinerales.appendChild(opt); });
+      }
+
+      if (buscador && selectMinerales) {
+        buscador.addEventListener('input', function() {
+          const filtro = buscador.value.toLowerCase();
+          Array.from(selectMinerales.options).forEach(function(opt) {
+            const texto = opt.text.toLowerCase();
+            opt.style.display = texto.indexOf(filtro) !== -1 ? '' : 'none';
+          });
+        });
+      }
+    });
+
     let puntos = [];
+    let coordenadasBloqueadas = false;
     let poligonoLayer;
     let marcadorUnico = null;
 
@@ -511,7 +549,7 @@ if (!isset($_SESSION['usuario'])) {
   let muestra_y = parseFloat(imuestra_y.value);
   
   if (isNaN(muestra_x) || isNaN(muestra_y)) {
-    alert("Por favor ingresa valores válidos para X (ESTE) e Y (NORTE)");
+    alert("Por favor ingresa valores válidos para X (NORTE) e Y (ESTE)");
     return;
   }
 
@@ -521,24 +559,24 @@ if (!isset($_SESSION['usuario'])) {
   if (sistema === 'posgar2007') {
     // POSGAR 2007: Y (ESTE) debe comenzar con 2, X (NORTE) con 6
     if (muestra_y < 2000000 || muestra_y >= 3000000) {
-      alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+      alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
       imuestra_y.focus();
       return;
     }
     if (muestra_x < 6000000 || muestra_x >= 7000000) {
-      alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+      alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
       imuestra_x.focus();
       return;
     }
   } else {
     // POSGAR 94: rangos similares pero se convertirán
     if (muestra_y < 2000000 || muestra_y >= 3000000) {
-      alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
+      alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
       imuestra_y.focus();
       return;
     }
     if (muestra_x < 6000000 || muestra_x >= 7000000) {
-      alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
+      alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
       imuestra_x.focus();
       return;
     }
@@ -585,13 +623,17 @@ function eliminarUltimoPuntoUnico(event) {
 }
 
     function agregarPunto() {
+      if (coordenadasBloqueadas) {
+        alert("El ingreso de coordenadas está finalizado. Para agregar o modificar vértices, presione 'Reabrir ingreso de coordenadas'.");
+        return;
+      }
       const ix = document.getElementById("x");
       const iy = document.getElementById("y");
       let x = parseFloat(ix.value);
       let y = parseFloat(iy.value);
       
       if (isNaN(x) || isNaN(y)) {
-        alert("Por favor ingresa valores válidos para X (ESTE) e Y (NORTE)");
+        alert("Por favor ingresa valores válidos para X (NORTE) e Y (ESTE)");
         return;
       }
 
@@ -601,24 +643,24 @@ function eliminarUltimoPuntoUnico(event) {
       if (sistema === 'posgar2007') {
         // POSGAR 2007: Y (ESTE) debe comenzar con 2, X (NORTE) con 6
         if (y < 2000000 || y >= 3000000) {
-          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+          alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
           iy.focus();
           return;
         }
         if (x < 6000000 || x >= 7000000) {
-          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+          alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
           ix.focus();
           return;
         }
       } else {
         // POSGAR 94: rangos similares pero se convertirán
         if (y < 2000000 || y >= 3000000) {
-          alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
+          alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492382.03');
           iy.focus();
           return;
         }
         if (x < 6000000 || x >= 7000000) {
-          alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
+          alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677729.89');
           ix.focus();
           return;
         }
@@ -711,6 +753,10 @@ function eliminarUltimoPuntoUnico(event) {
 
     function eliminarUltimoPunto(event) {
       event.preventDefault();
+      if (coordenadasBloqueadas) {
+        alert("El ingreso de coordenadas está finalizado. Para eliminar vértices, presione 'Reabrir ingreso de coordenadas'.");
+        return;
+      }
       if (puntos.length === 0) return;
       puntos.pop();
       actualizarListaPuntos();
@@ -718,6 +764,26 @@ function eliminarUltimoPuntoUnico(event) {
       else if (poligonoLayer) {
         map.removeLayer(poligonoLayer);
         poligonoLayer = null;
+      }
+    }
+
+    function toggleBloqueoCoordenadas() {
+      const btn = document.getElementById('btnFinalizarCoordenadas');
+      const inputX = document.getElementById('x');
+      const inputY = document.getElementById('y');
+      const btnAgregar = document.querySelector('button[onclick="agregarPunto()"]');
+      const btnEliminar = document.querySelector('button[onclick="eliminarUltimoPunto(event)"]');
+
+      coordenadasBloqueadas = !coordenadasBloqueadas;
+
+      const disabled = coordenadasBloqueadas;
+      if (inputX) inputX.disabled = disabled;
+      if (inputY) inputY.disabled = disabled;
+      if (btnAgregar) btnAgregar.disabled = disabled;
+      if (btnEliminar) btnEliminar.disabled = disabled;
+
+      if (btn) {
+        btn.textContent = disabled ? 'Reabrir ingreso de coordenadas' : 'Finalizar ingreso de coordenadas';
       }
     }
 
@@ -787,53 +853,9 @@ function eliminarUltimoPuntoUnico(event) {
     }
 
     // Función para validar la secuencia horaria de puntos
+    // En esta versión se desactiva la validación automática para no
+    // mostrar advertencias ni modificar el orden antes de enviar.
     function validarSecuenciaHoraria() {
-        if (puntos.length < 3) return true;
-        
-        // Para 4 puntos, verificar si están en el orden correcto: V3→V1→V4→V2
-        if (puntos.length === 4) {
-            if (confirm(`⚠️ POLÍGONO DE 4 PUNTOS DETECTADO:\n\n` +
-                       `Para evitar la forma de "reloj de arena", el orden correcto debe ser:\n` +
-                       `V3 → V1 → V4 → V2\n\n` +
-                       `¿Desea aplicar automáticamente el orden correcto?`)) {
-                corregirSecuenciaCompleta();
-                return false;
-            }
-            return true;
-        }
-        
-        // Para otros casos, usar validación original
-        
-        // 1. Encontrar el punto más al noroeste (mayor Y, menor X en caso de empate)
-        let puntoNoroeste = 0;
-        for (let i = 1; i < puntos.length; i++) {
-            if (puntos[i].y > puntos[puntoNoroeste].y || 
-                (puntos[i].y === puntos[puntoNoroeste].y && puntos[i].x < puntos[puntoNoroeste].x)) {
-                puntoNoroeste = i;
-            }
-        }
-        
-        // 2. Verificar si el primer punto es el noroeste
-        if (puntoNoroeste !== 0) {
-            if (confirm(`⚠️ ADVERTENCIA: El primer punto no es el más al NOROESTE.\n\nEl punto más al noroeste está en la posición ${puntoNoroeste + 1}:\n` +
-                       `ESTE: ${puntos[puntoNoroeste].x}, NORTE: ${puntos[puntoNoroeste].y}\n\n` +
-                       `¿Desea reordenar automáticamente los puntos comenzando desde el noroeste?`)) {
-                reordenarDesdePuntoNoroeste(puntoNoroeste);
-                return false; // Rechazar envío para que usuario revise el reordenamiento
-            }
-        }
-        
-        // 3. Verificar orientación horaria
-        const area = calcularAreaConSigno(puntos);
-        if (area > 0) {
-            if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
-                       `Los vértices deben seguir el sentido HORARIO (como las manecillas del reloj).\n\n` +
-                       `¿Desea invertir automáticamente el orden de los puntos?`)) {
-                invertirOrdenPuntos();
-                return false; // Rechazar envío para que usuario revise
-            }
-        }
-        
         return true;
     }
     

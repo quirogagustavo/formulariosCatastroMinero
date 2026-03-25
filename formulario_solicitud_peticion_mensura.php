@@ -311,9 +311,13 @@ if (!isset($_SESSION['usuario'])) {
   <div class="card mt-4 border-success">
     <div class="card-header bg-success text-white">
       <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> PERÍMETRO DE MENSURA</h5>
-      <small>Ingrese el polígono que delimita el área total de mensura (UN SOLO POLÍGONO)</small>
+      <small>Se calcula automáticamente con las pertenencias ingresadas</small>
     </div>
     <div class="card-body">
+      <div class="alert alert-success mb-3">
+        El perímetro se genera automáticamente a partir de las pertenencias cargadas. Ingrese solo las pertenencias; el sistema calculará el perímetro de mensura con la envolvente exterior.
+      </div>
+      <div id="perimetro-legacy" style="display:none;">
       
       <!-- Opción 1: Importar desde CSV -->
       <h6 class="text-success"><i class="bi bi-file-earmark-arrow-up"></i> Opción A: Importar desde archivo CSV</h6>
@@ -338,12 +342,12 @@ if (!isset($_SESSION['usuario'])) {
       <h6 class="text-success"><i class="bi bi-pencil-square"></i> Opción B: Ingreso manual de vértices</h6>
       <div class="row g-3 align-items-end">
         <div class="col-md-3">
-          <label class="form-label fw-bold">X (ESTE)</label>
+          <label class="form-label fw-bold">X (NORTE)</label>
           <input type="number" id="y_perimetro" class="form-control" step="0.01" placeholder="2XXXXXX.XX">
           <small class="text-muted">Debe comenzar con 2</small>
         </div>
         <div class="col-md-3">
-          <label class="form-label fw-bold">Y (NORTE)</label>
+          <label class="form-label fw-bold">Y (ESTE)</label>
           <input type="number" id="x_perimetro" class="form-control" step="0.01" placeholder="6XXXXXX.XX">
           <small class="text-muted">Debe comenzar con 6</small>
         </div>
@@ -388,6 +392,7 @@ if (!isset($_SESSION['usuario'])) {
           </div>
         </div>
       </div>
+      </div>
     </div>
   </div>
 
@@ -424,12 +429,12 @@ if (!isset($_SESSION['usuario'])) {
       <h6 class="text-primary"><i class="bi bi-pencil-square"></i> Opción B: Ingreso manual de vértices</h6>
       <div class="row g-3 align-items-end">
         <div class="col-md-3">
-          <label class="form-label fw-bold">X (ESTE)</label>
+          <label class="form-label fw-bold">X (NORTE)</label>
           <input type="number" id="y_pertenencia" class="form-control" step="0.01" placeholder="2XXXXXX.XX">
           <small class="text-muted">Debe comenzar con 2</small>
         </div>
         <div class="col-md-3">
-          <label class="form-label fw-bold">Y (NORTE)</label>
+          <label class="form-label fw-bold">Y (ESTE)</label>
           <input type="number" id="x_pertenencia" class="form-control" step="0.01" placeholder="6XXXXXX.XX">
           <small class="text-muted">Debe comenzar con 6</small>
         </div>
@@ -536,6 +541,29 @@ if (!isset($_SESSION['usuario'])) {
   </div>
 
  </div>
+
+      <hr class="my-4">
+      
+      <!-- PANEL DE VERIFICACIÓN FINAL -->
+      <div class="alert alert-info mb-4">
+        <h5 class="mb-3">📊 Verificación Final - Datos a Persistir</h5>
+        <div class="row">
+          <div class="col-md-6">
+            <small><strong>🟢 Perímetro de Mensura:</strong></small>
+            <ul class="small mb-0">
+              <li id="verif-perimetro-vertices">Vértices: -</li>
+              <li id="verif-perimetro-area">Área: -</li>
+              <li id="verif-perimetro-superficie">Superficie declarada: -</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <small><strong>🔵 Pertenencias:</strong></small>
+            <ul class="small mb-0" id="verif-pertenencias">
+              <li>-</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
       <div class="row mt-4">
         <div class="col-auto">
@@ -715,16 +743,16 @@ function agregarPuntoPerimetro(){
   }
   
   // Validar que X (ESTE) comience con 2
-  // Nota: y_perimetro contiene ESTE, x_perimetro contiene NORTE
+  // Nota: y_perimetro contiene ESTE (Y), x_perimetro contiene NORTE (X)
   if (y < 2000000 || y >= 3000000){
-    alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+    alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
     iy.focus();
     return;
   }
   
-  // Validar que Y (NORTE) comience con 6
+  // Validar que X (NORTE) comience con 6
   if (x < 6000000 || x >= 7000000){
-    alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+    alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
     ix.focus();
     return;
   }
@@ -944,16 +972,16 @@ function agregarPuntoPertenencia(){
   }
   
   // Validar que X (ESTE) comience con 2
-  // Nota: y_pertenencia contiene ESTE, x_pertenencia contiene NORTE
+  // Nota: y_pertenencia contiene ESTE (Y), x_pertenencia contiene NORTE (X)
   if (y < 2000000 || y >= 3000000){
-    alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
+    alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nEjemplo: 2492370.69');
     iy.focus();
     return;
   }
   
-  // Validar que Y (NORTE) comience con 6
+  // Validar que X (NORTE) comience con 6
   if (x < 6000000 || x >= 7000000){
-    alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
+    alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nEjemplo: 6677723.20');
     ix.focus();
     return;
   }
@@ -1172,24 +1200,7 @@ function finalizarPertenenciaManual(){
     alert('Una pertenencia necesita al menos 3 vértices');
     return;
   }
-  
-  // VALIDACIÓN: Verificar que existe un perímetro de mensura
-  if (solicitudesMensura.length === 0) {
-    alert('⚠️ ERROR: Debe ingresar primero el PERÍMETRO DE MENSURA antes de agregar pertenencias.');
-    return;
-  }
-  
-  // VALIDACIÓN: Verificar que la pertenencia está dentro del perímetro
-  const perimetro = solicitudesMensura[0].vertices;
-  const validacion = poligonoEnPoligono(pertenenciaVertices, perimetro);
-  
-  if (!validacion.valido) {
-    alert('❌ VALIDACIÓN FALLIDA\n\n' + validacion.mensaje + '\n\nLas pertenencias deben estar completamente dentro del perímetro de mensura.');
-    return;
-  }
-  
-  console.log('✅ Validación geométrica:', validacion.mensaje);
-  
+
   // Solicitar ID de solicitud y ID de pertenencia
   const id_sol = prompt('Ingrese ID de Solicitud (número):', '1');
   if (!id_sol) return;
@@ -1208,7 +1219,8 @@ function finalizarPertenenciaManual(){
   
   multipoligonos.push(pertenencia);
   document.getElementById('multipoligonos').value = JSON.stringify(multipoligonos);
-  
+
+  construirPerimetroDesdePertenencias();
   limpiarPertenencia();
   dibujarMultipoligonos();
   actualizarLista();
@@ -1265,20 +1277,48 @@ function actualizarLista(){
     pol.sup_graf_ha = areaM2 / 10000; // Convertir m² a hectáreas
     const areaHa = (isFinite(pol.sup_graf_ha) ? pol.sup_graf_ha : 0).toFixed(2);
     
+    // Generar tabla de coordenadas
+    const tablaCoords = pol.vertices.map((v, vi) => `
+      <tr style="font-size: 0.85rem;">
+        <td><small>${v.id_v}</small></td>
+        <td><small>${v.y.toFixed(2)}</small></td>
+        <td><small>${v.x.toFixed(2)}</small></td>
+      </tr>
+    `).join('');
+    
     const li = document.createElement("li");
     li.className="list-group-item list-group-item-primary";
     li.innerHTML = `
-      <li class="list-group-item list-group-item-primary" data-index="${idx}">
-  <div class="d-flex gap-3 align-items-center" style="background-color: #c6d1f5ff; padding: 5px;">
-    <div><strong>Pertenencia ${pol.id_p}</strong></div>
-    <div>Polígono: ${pol.id_sol}</div>
-    <div>Superficie calculada: <b>${areaHa} ha</b></div>
-        <div class="d-flex align-items-center gap-2" style="max-width: 350px; width: 100%;">
-        <span class="flex-shrink-0">Superficie declarada:</span>
-        <input type="number" step="0.01" class="form-control form-control-sm sup-decl-input flex-grow-1" value="${pol.sup_decl ?? ''}"> ha
-    </div>
-    </div>
-</li>`;
+      <div class="list-group-item list-group-item-primary" data-index="${idx}" style="padding: 0; margin: 0;">
+        <div class="d-flex gap-3 align-items-center" style="background-color: #c6d1f5ff; padding: 8px; margin: 0;">
+          <div style="min-width: 120px;"><strong>Pertenencia ${pol.id_p}</strong></div>
+          <div style="min-width: 100px;"><small>ID Sol: ${pol.id_sol}</small></div>
+          <div style="min-width: 140px;"><small>Área: <b>${areaHa} ha</b></small></div>
+          <div class="d-flex align-items-center gap-2" style="flex: 1;">
+            <span class="flex-shrink-0" style="min-width: 140px;"><small>Área declarada:</small></span>
+            <input type="number" step="0.01" class="form-control form-control-sm sup-decl-input" style="width: 100px;" value="${pol.sup_decl ?? ''}"> ha
+          </div>
+          <button class="btn btn-sm btn-outline-primary" onclick="toggleCoordinates('coords-${idx}')" title="Ver coordenadas">
+            📋
+          </button>
+        </div>
+        <div id="coords-${idx}" style="display: none; padding: 10px; background-color: #f0f3ff; border-top: 1px solid #c6d1f5;">
+          <small><strong>Vértices:</strong></small>
+          <table class="table table-sm table-borderless" style="font-size: 0.75rem; margin: 5px 0 0 0;">
+            <thead style="background-color: #e0e7ff;">
+              <tr>
+                <th style="padding: 3px;">V</th>
+                <th style="padding: 3px;">Este (m)</th>
+                <th style="padding: 3px;">Norte (m)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tablaCoords}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
     lista.appendChild(li);
   });
 }
@@ -1292,12 +1332,18 @@ function importarDesdeCSV(){
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).filter(l=>l.trim()!=="");
+    console.log(`📊 CSV: ${lines.length} líneas totales`);
+    
     let tempPol = {};
     let errores = [];
+    let verticesImportados = 0;
     
     lines.forEach((line, lineNum) => {
       const parts = line.split(";");
-      if(parts.length < 5) return; // formato: id_poligono; id_pertenencia; id_vertice; este; norte
+      if(parts.length < 5) {
+        console.warn(`  Línea ${lineNum+1}: Formato inválido (${parts.length} columnas)`);
+        return;
+      }
       
       const id_sol = parts[0].trim(); 
       const id_pert = parts[1].trim();
@@ -1308,15 +1354,18 @@ function importarDesdeCSV(){
       const este = parseFloat(parts[3].replace(",","."));
       const norte = parseFloat(parts[4].replace(",","."));
       
-      if(isNaN(este)||isNaN(norte)) return;
+      if(isNaN(este)||isNaN(norte)) {
+        console.warn(`  Línea ${lineNum+1}: Coordenadas inválidas (${parts[3]}, ${parts[4]})`);
+        return;
+      }
       
       // Validar rangos POSGAR 2007 San Juan
       if (este < 2000000 || este >= 3000000) {
-        errores.push(`Línea ${lineNum+1}: X (ESTE)=${este} fuera de rango (debe comenzar con 2)`);
+        errores.push(`Línea ${lineNum+1}: Y (ESTE)=${este} fuera de rango (debe comenzar con 2)`);
         return;
       }
       if (norte < 6000000 || norte >= 7000000) {
-        errores.push(`Línea ${lineNum+1}: Y (NORTE)=${norte} fuera de rango (debe comenzar con 6)`);
+        errores.push(`Línea ${lineNum+1}: X (NORTE)=${norte} fuera de rango (debe comenzar con 6)`);
         return;
       }
       
@@ -1325,16 +1374,25 @@ function importarDesdeCSV(){
 
       if(!tempPol[id_pert]) tempPol[id_pert] = { id_p: id_pert, id_sol: id_sol, vertices: [] };
       tempPol[id_pert].vertices.push({id_v, x, y});
+      verticesImportados++;
     });
 
     if(errores.length > 0) {
       alert("⚠️ ERRORES EN CSV:\n\n" + errores.join("\n") + "\n\nLos puntos con errores fueron omitidos.");
     }
 
+    // Log de vértices importados por pertenencia
+    console.log(`✅ Vértices importados: ${verticesImportados} total`);
+    Object.values(tempPol).forEach(pol => {
+      console.log(`  Pertenencia ${pol.id_p}: ${pol.vertices.length} vértices`);
+    });
+
     multipoligonos = Object.values(tempPol);
 
     document.getElementById("multipoligonos").value = JSON.stringify(multipoligonos);
+    construirPerimetroDesdePertenencias();
     dibujarMultipoligonos();
+    actualizarPanelVerificacion();
   };
   reader.readAsText(file,"UTF-8");
 }
@@ -1367,11 +1425,11 @@ function importarSolicitudMensura(){
 
       // Validar rangos POSGAR 2007 San Juan
       if (este < 2000000 || este >= 3000000) {
-        errores.push(`Línea ${lineNum+1}: X (ESTE)=${este} fuera de rango (debe comenzar con 2)`);
+        errores.push(`Línea ${lineNum+1}: Y (ESTE)=${este} fuera de rango (debe comenzar con 2)`);
         return;
       }
       if (norte < 6000000 || norte >= 7000000) {
-        errores.push(`Línea ${lineNum+1}: Y (NORTE)=${norte} fuera de rango (debe comenzar con 6)`);
+        errores.push(`Línea ${lineNum+1}: X (NORTE)=${norte} fuera de rango (debe comenzar con 6)`);
         return;
       }
       
@@ -1387,22 +1445,8 @@ function importarSolicitudMensura(){
     }
 
     solicitudesMensura = Object.values(tempPol);
-    
-    // Validar secuencia de cada polígono importado
-    solicitudesMensura.forEach(pol => {
-      const resultado = validarSecuenciaPoligono(pol.vertices, `Perímetro ${pol.id_mensura}`);
-      if (resultado.errores.length > 0) {
-        alert(`⚠️ ADVERTENCIAS para ${resultado.nombre}:\n\n` + resultado.errores.join('\n'));
-      }
-    });
-    
     document.getElementById("solicitudes_mensura").value = JSON.stringify(solicitudesMensura);
     dibujarSolicitudes();
-    
-    // Después de importar el perímetro, preguntar si es de una sola pertenencia
-    if (solicitudesMensura.length > 0) {
-      preguntarPertenenciaUnica();
-    }
   };
   reader.readAsText(file,"UTF-8");
 }
@@ -1422,12 +1466,26 @@ function prepararEnvio(){
       }
   });
 
-  // VALIDACIÓN: Superficie de pertenencias no puede exceder el perímetro
+  // Recalcular perímetro antes de validar
+  construirPerimetroDesdePertenencias();
+
+  if (multipoligonos.length === 0) {
+    alert('⚠️ Debe ingresar al menos una pertenencia para construir el perímetro de mensura.');
+    return false;
+  }
+
+  if (solicitudesMensura.length === 0) {
+    alert('⚠️ Error: El perímetro de mensura no fue calculado correctamente.');
+    return false;
+  }
+
+  // VALIDACIÓN: Superficie de pertenencias no puede exceder el perímetro (bloqueante)
   if (!validarSuperficies()) {
     return false;
   }
 
   // Validar secuencia horaria de polígonos
+  // Si el usuario presiona "Cancelar" en la advertencia, no se registra el área
   if (!validarSecuenciaPoligonos()) {
     return false;
   }
@@ -1436,8 +1494,18 @@ function prepararEnvio(){
   const sistemaCoordenadas = document.getElementById("sistema-coordenadas").value;
   document.getElementById("sistema_coordenadas_hidden").value = sistemaCoordenadas;
 
+  // LOG FINAL DE PERSISTENCIA
+  console.log('📋 RESUMEN FINAL PARA PERSISTENCIA:');
+  console.log(`  ✅ Perímetro: ${solicitudesMensura[0].vertices.length} vértices, área: ${(solicitudesMensura[0].sup_graf_ha || 0).toFixed(2)} ha`);
+  console.log(`  ✅ Pertenencias: ${multipoligonos.length} unidades`);
+  multipoligonos.forEach(p => {
+    console.log(`    - ${p.id_p}: ${p.vertices.length} vértices, área: ${(p.sup_graf_ha || 0).toFixed(2)} ha`);
+  });
+
   document.getElementById("solicitudes_mensura").value = JSON.stringify(solicitudesMensura);
   document.getElementById("multipoligonos").value = JSON.stringify(multipoligonos);
+  
+  console.log('✅ JSON capturado en campos hidden, listo para enviar.');
   return true;
 }
 
@@ -1525,12 +1593,12 @@ function validarSecuenciaPoligonos() {
                    `1. Edite los archivos CSV\n` +
                    `2. Asegúrese de que cada polígono comience desde el vértice noroeste\n` +
                    `3. Los vértices deben seguir orden horario\n` +
-                   `4. Vuelva a importar los archivos`;
-    
-    if (confirm(mensaje + `\n\n¿Desea continuar de todos modos? (No recomendado)`)) {
-      return true;
-    }
-    return false;
+                   `4. Vuelva a importar los archivos\n\n` +
+                   `Se registrará el polígono con estos errores de secuencia.\n` +
+                   `Si presiona CANCELAR NO se registrará el área.`;
+
+    // confirm devuelve true si el usuario acepta (registrar) y false si cancela (no registrar)
+    return confirm(mensaje + `\n\n¿Desea CONTINUAR de todos modos?`);
   }
   
   return true;
@@ -1599,6 +1667,31 @@ function validarSecuenciaPoligono(vertices, nombre) {
   return { valido: true, mensaje: "" };
 }
 
+// Función para toggle (mostrar/ocultar) coordenadas de una pertenencia
+function toggleCoordinates(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.style.display = element.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Actualizar panel de verificación final
+function actualizarPanelVerificacion() {
+  if (solicitudesMensura.length > 0) {
+    const perim = solicitudesMensura[0];
+    document.getElementById('verif-perimetro-vertices').textContent = `Vértices: ${perim.vertices.length}`;
+    document.getElementById('verif-perimetro-area').textContent = `Área calculada: ${(perim.sup_graf_ha || 0).toFixed(2)} ha`;
+    document.getElementById('verif-perimetro-superficie').textContent = `Superficie declarada: ${(perim.sup_decl || 0).toFixed(2)} ha`;
+  }
+  
+  if (multipoligonos.length > 0) {
+    const html = multipoligonos.map(p => 
+      `<li>${p.id_p}: ${p.vertices.length} vértices, ${(p.sup_graf_ha || 0).toFixed(2)} ha</li>`
+    ).join('');
+    document.getElementById('verif-pertenencias').innerHTML = html;
+  }
+}
+
 // Función para analizar polígonos importados
 function analizarPoligonosImportados() {
   if (solicitudesMensura.length === 0 && multipoligonos.length === 0) {
@@ -1638,6 +1731,75 @@ function analizarPoligonosImportados() {
   }
   
   alert(informe);
+}
+
+// Construye el perímetro de mensura a partir de las pertenencias cargadas (envolvente convexa)
+function construirPerimetroDesdePertenencias() {
+  if (!multipoligonos || multipoligonos.length === 0) {
+    solicitudesMensura = [];
+    document.getElementById('solicitudes_mensura').value = '';
+    dibujarSolicitudes();
+    actualizarLista();
+    return;
+  }
+
+  console.log('🔧 Construyendo perímetro desde ' + multipoligonos.length + ' pertenencia(s)...');
+  
+  // Recolectar TODOS los puntos de todas las pertenencias
+  let allPoints = [];
+  multipoligonos.forEach((pol, idx) => {
+    if (pol.vertices && pol.vertices.length >= 3) {
+      pol.vertices.forEach(v => {
+        const [lon, lat] = proj4(fromProjection, toProjection, [v.y, v.x]);
+        allPoints.push(turf.point([lon, lat]));
+      });
+      console.log(`  Pertenencia ${pol.id_p}: ${pol.vertices.length} vértices`);
+    }
+  });
+
+  if (allPoints.length < 3) {
+    console.error('❌ No hay suficientes puntos para construir el perímetro.');
+    return;
+  }
+
+  console.log(`  Total de puntos: ${allPoints.length}`);
+
+  try {
+    // Crear FeatureCollection con todos los puntos
+    const points = turf.featureCollection(allPoints);
+    
+    // Calcular envolvente convexa (convex hull)
+    const convexHull = turf.convex(points);
+    
+    if (!convexHull || !convexHull.geometry) {
+      console.error('❌ No se pudo calcular la envolvente convexa.');
+      return;
+    }
+
+    const coords = convexHull.geometry.coordinates[0];
+    console.log(`  Envolvente convexa: ${coords.length - 1} vértices (${coords.length} con cierre)`);
+    
+    // Convertir a POSGAR 2007 y crear vértices
+    const verticesPerimetro = coords.slice(0, -1).map((coord, idx) => {
+      const [lon, lat] = coord;
+      const [este, norte] = proj4(toProjection, fromProjection, [lon, lat]);
+      return { id_v: idx + 1, x: norte, y: este };
+    });
+
+    const area = turf.area(convexHull);
+    console.log(`✅ Perímetro final: ${verticesPerimetro.length} vértices, área: ${area.toFixed(2)} m²`);
+
+    solicitudesMensura = [{ id_mensura: 1, vertices: verticesPerimetro, sup_decl: 0, sup_graf_ha: 0 }];
+    document.getElementById('solicitudes_mensura').value = JSON.stringify(solicitudesMensura);
+
+    dibujarSolicitudes();
+    actualizarLista();
+    actualizarPanelVerificacion();
+    
+  } catch (error) {
+    console.error('❌ Error al construir perímetro:', error);
+    alert('⚠️ Error al construir el perímetro: ' + error.message + '\n\nAbre la consola (F12) para ver detalles.');
+  }
 }
 </script>
 

@@ -32,14 +32,14 @@
     <legend class="h5">Ingresar Coordenadas Gauss Krüger Faja 2 POSGAR 2007 (EPSG:5344)</legend>
     <div class="row g-3 align-items-end">
     <div class="col-md-4">
-      <label class="form-label fw-bold">X (ESTE)</label>
+      <label class="form-label fw-bold">X (NORTE)</label>
       <input type="number" id="x" class="form-control" required step="0.01" min="0" placeholder="0.00">
-      <small class="text-muted">Debe comenzar con 2</small>
+      <small class="text-muted">Debe comenzar con 6</small>
     </div>
     <div class="col-md-4">
-      <label class="form-label fw-bold">Y (NORTE)</label>
+      <label class="form-label fw-bold">Y (ESTE)</label>
       <input type="number" id="y" class="form-control" required step="0.01" min="0" placeholder="0.00">
-      <small class="text-muted">Debe comenzar con 6</small>
+      <small class="text-muted">Debe comenzar con 2</small>
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -271,20 +271,20 @@ proj4.defs("POSGAR07-GEO", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +n
       const y = parseFloat(iy.value);
       
       if (isNaN(x) || isNaN(y)) {
-        alert("Por favor ingresa valores válidos para ESTE y NORTE");
+        alert("Por favor ingresa valores válidos para NORTE (X) y ESTE (Y)");
         return;
       }
 
-      // Validar que X (ESTE) comience con 2 (rango 2000000-2999999)
+      // Validar que Y (ESTE) comience con 2 (rango 2000000-2999999)
       if (y < 2000000 || y >= 3000000) {
-        alert('⚠️ ERROR: La coordenada X (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
+        alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
         iy.focus();
         return;
       }
 
-      // Validar que Y (NORTE) comience con 6 (rango 6000000-6999999)
+      // Validar que X (NORTE) comience con 6 (rango 6000000-6999999)
       if (x < 6000000 || x >= 7000000) {
-        alert('⚠️ ERROR: La coordenada Y (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
+        alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
         ix.focus();
         return;
       }

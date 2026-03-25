@@ -248,11 +248,11 @@ if (!isset($_SESSION['usuario'])) {
       <!-- Inputs de coordenadas -->
       <div class="row g-2 mb-2">
         <div class="col-md-4">
-          <label class="form-label">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+          <label class="form-label">X (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
           <input type="number" id="linea_x" class="form-control" step="0.01" placeholder="Ejemplo: 2492370.69">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+          <label class="form-label">Y (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
           <input type="number" id="linea_y" class="form-control" step="0.01" placeholder="Ejemplo: 6677723.20">
         </div>
         <div class="col-md-4">
@@ -356,11 +356,11 @@ if (!isset($_SESSION['usuario'])) {
       <!-- Inputs de coordenadas -->
       <div class="row g-2 mb-2">
         <div class="col-md-4">
-          <label class="form-label">X (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
+          <label class="form-label">X (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
           <input type="number" id="poligono_x" class="form-control" step="0.01" placeholder="Ejemplo: 2492370.69">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Y (NORTE) <small class="text-danger">Debe comenzar con 6</small></label>
+          <label class="form-label">Y (ESTE) <small class="text-danger">Debe comenzar con 2</small></label>
           <input type="number" id="poligono_y" class="form-control" step="0.01" placeholder="Ejemplo: 6677723.20">
         </div>
         <div class="col-md-4">
