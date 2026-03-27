@@ -67,7 +67,9 @@ if (count($puntos) === 4) {
 }
 
 $coords = array_map(function($p) {
-    return "{$p['x']} {$p['y']}";
+    // En el formulario, los puntos se guardan como x = NORTE, y = ESTE
+    // Para el WKT (X Y) debemos enviar (ESTE, NORTE)
+    return "{$p['y']} {$p['x']}";
 }, $puntos);
 
 
@@ -81,7 +83,9 @@ if ($programa=='SI') {
 $muestra_z = 0;
 $muestra_m = 0;
 
-$wkt_punto_muestra = "POINT($muestra_x $muestra_y)";
+// En el formulario, muestra_x = NORTE y muestra_y = ESTE
+// Para el WKT POINT(X Y) usamos (ESTE, NORTE)
+$wkt_punto_muestra = "POINT($muestra_y $muestra_x)";
 
 $res2 = pg_query($db, 'SELECT COALESCE(MAX(lem_id), 0) + 1 AS next_id FROM registro_grafico.gra_cm_lem_pga07');
 if (!$res2) {
@@ -90,8 +94,8 @@ if (!$res2) {
 $row2 = pg_fetch_assoc($res2);
 $muestra_next_id = (int)$row2['next_id'];
 
-echo 'Muestra Este: '.$muestra_x.'<br>';
-echo 'Muestra Norte: '.$muestra_y.'<br><br><br>';
+echo 'Muestra Este: '.$muestra_y.'<br>';
+echo 'Muestra Norte: '.$muestra_x.'<br><br><br>';
 
 }
 
@@ -139,7 +143,7 @@ $query2 = "
         $7,
         $8)";
 
-$result2 = pg_query_params($db, $query2, [$muestra_next_id, $exp_siged, $wkt_punto_muestra, $fecha_alta, $departamento, $denominacion, $muestra_x, $muestra_y]);
+$result2 = pg_query_params($db, $query2, [$muestra_next_id, $exp_siged, $wkt_punto_muestra, $fecha_alta, $departamento, $denominacion, $muestra_y, $muestra_x]);
 
 if ($result2) {
     echo "<h4>Marcador guardado correctamente con ID: ".$muestra_next_id." -- en registro_grafico.gra_cm_lem_pga07 <h4>";

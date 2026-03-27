@@ -53,8 +53,10 @@ if (count($puntos) === 4) {
     echo '<p style="color: blue;"><strong>Nota:</strong> Se aplicó corrección automática para 4 puntos (orden V3→V1→V4→V2) para evitar forma de reloj de arena.</p>';
 }
 
-$coords = array_map(function($p) {
-    return "{$p['x']} {$p['y']}";
+        $coords = array_map(function($p) {
+            // En el formulario, guardamos puntos como x = NORTE, y = ESTE
+            // Para el WKT (X Y) debemos enviar (ESTE, NORTE)
+            return "{$p['y']} {$p['x']}";
 }, $puntos);
 
 if ($coords[0] !== end($coords)) {

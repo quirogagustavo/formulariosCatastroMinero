@@ -407,10 +407,9 @@ if (!isset($_SESSION['usuario'])) {
 
       // Realizar petición AJAX
       const formData = new FormData();
-      // validar_punto.php usa ST_MakePoint($1,$2) como (ESTE, NORTE)
-      // En este formulario manejamos x=NORTE, y=ESTE, por eso se envían invertidos
-      formData.append('x', y); // ESTE
-      formData.append('y', x); // NORTE
+        // En ambos formularios usamos el mismo criterio: x = NORTE, y = ESTE
+        formData.append('x', x);
+        formData.append('y', y);
 
       fetch('validar_punto.php', {
         method: 'POST',
@@ -466,9 +465,9 @@ if (!isset($_SESSION['usuario'])) {
 
     function validarPuntoDentroLimiteSilencioso(x, y, callback) {
       const formData = new FormData();
-      // Envío en orden (ESTE, NORTE) para validar_punto.php
-      formData.append('x', y); // ESTE
-      formData.append('y', x); // NORTE
+        // validar_punto.php recibe (x, y) como (NORTE, ESTE)
+        formData.append('x', x);
+        formData.append('y', y);
 
       fetch('validar_punto.php', {
         method: 'POST',
@@ -562,7 +561,7 @@ if (!isset($_SESSION['usuario'])) {
       if (indice >= 0 && indice < puntos.length) {
         const punto = puntos[indice];
         // Convertir coordenadas de POSGAR 2007 a WGS84 para el mapa
-        const [lon, lat] = proj4(fromProjection, toProjection, [punto.y, punto.x]);
+        const [lon, lat] = proj4(fromProjection, toProjection, [punto.x, punto.y]);
         // Hacer zoom al punto con nivel 17
         map.setView([lat, lon], 17);
       }
