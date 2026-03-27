@@ -1,0 +1,7 @@
+.env
+.env.*
+.htaccess
+catastrominero_prod_*.dump
+info.php
+test_conexion.php
+test_soa.php
