@@ -102,7 +102,7 @@ if ($result) {
             if (!$ok) {
                 echo "<p style='color:red'>Error insertando solicitante: ".pg_last_error($db)."</p>";
             }
-            else {echo "<p style='color:green'>Insertando solicitante en tabla solicitantes </p>";}
+            ecd /var/www/html/formularioslse {echo "<p style='color:green'>Insertando solicitante en tabla solicitantes </p>";}
         }
     }
 
