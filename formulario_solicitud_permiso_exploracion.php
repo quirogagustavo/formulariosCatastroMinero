@@ -145,8 +145,14 @@ if (!isset($_SESSION['usuario'])) {
       </div>
 
         <div class="col-md-6">
-          <br><label class="form-label">Superficie declarada (ha)</label>
-          <input type="number" step="0.0001" min="0" name="sup_ha" class="form-control" placeholder="0.0000" required>
+          <br><label class="form-label text-secondary fw-semibold">Superficie declarada (ha) <span class="badge text-bg-secondary">Manual</span></label>
+          <input type="number" step="0.0001" min="0" name="sup_ha" id="sup_ha" class="form-control bg-light border-secondary-subtle" placeholder="0.0000" required>
+        </div>
+
+        <div class="col-md-6">
+          <br><label class="form-label text-primary fw-semibold">Superficie calculada (ha) <span class="badge text-bg-info">Automática</span></label>
+          <input type="number" step="0.0001" min="0" name="sup_calc_ha" id="sup_calc_ha" class="form-control bg-info-subtle border-info text-primary fw-semibold" placeholder="0.0000" readonly>
+          <small class="text-primary">Se calcula automáticamente a partir de las coordenadas ingresadas</small>
         </div>
 
         
@@ -181,13 +187,13 @@ if (!isset($_SESSION['usuario'])) {
   <div class="row g-3 align-items-end">
     <div class="col-md-4">
       <label class="form-label fw-bold">X (NORTE)</label>
-      <input type="number" id="x" class="form-control" required step="0.01" min="0" placeholder="0.00" onblur="validarCoordenadaEnTiempoReal()">
-      <small class="text-muted">Debe comenzar con 6</small>
+      <input type="number" id="x" class="form-control" step="0.01" min="0" placeholder="2XXXXXX.XX" onblur="validarCoordenadaEnTiempoReal()">
+      <small class="text-muted">Debe comenzar con 2</small>
     </div>
     <div class="col-md-4">
       <label class="form-label fw-bold">Y (ESTE)</label>
-      <input type="number" id="y" class="form-control" required step="0.01" min="0" placeholder="0.00" onblur="validarCoordenadaEnTiempoReal()">
-      <small class="text-muted">Debe comenzar con 2</small>
+      <input type="number" id="y" class="form-control" step="0.01" min="0" placeholder="6XXXXXX.XX" onblur="validarCoordenadaEnTiempoReal()">
+      <small class="text-muted">Debe comenzar con 6</small>
     </div>
     <div class="col-md-4">
       <div class="d-flex gap-2">
@@ -197,6 +203,9 @@ if (!isset($_SESSION['usuario'])) {
       <div class="d-flex gap-2 mt-2">
         <button type="button" onclick="validarSecuenciaManual()" class="btn btn-info btn-sm flex-fill">🔍 Validar Secuencia</button>
         <button type="button" onclick="corregirSecuenciaCompleta()" class="btn btn-warning btn-sm flex-fill">🔧 Corregir Orden</button>
+      </div>
+      <div class="d-flex gap-2 mt-2">
+        <button type="button" onclick="finalizarAreaExploracion()" class="btn btn-success btn-sm flex-fill">✅ Finalizar Área de Exploración</button>
       </div>
     </div>
   </div>
@@ -347,47 +356,56 @@ if (!isset($_SESSION['usuario'])) {
       const sistema = document.getElementById('sistema-coordenadas').value;
       const ix = document.getElementById("x");
       const iy = document.getElementById("y");
-      let x = parseFloat(ix.value);
-      let y = parseFloat(iy.value);
-      
-      if (isNaN(x) || isNaN(y)) {
+      const valorX = parseFloat(ix.value);
+      const valorY = parseFloat(iy.value);
+
+      if (isNaN(valorX) || isNaN(valorY)) {
         alert("Por favor ingresa valores válidos para NORTE (X) y ESTE (Y)");
         return;
       }
 
-      // Validar que Y (ESTE) comience con 2 (rango 2000000-2999999)
-      if (y < 2000000 || y >= 3000000) {
-        alert('⚠️ ERROR: La coordenada Y (ESTE) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
-        iy.focus();
-        return;
-      }
+      // En este formulario queremos que la experiencia de carga
+      // sea igual a la de Petición de Mensura:
+      //  - El campo X muestra valores que comienzan con 2 (ESTE)
+      //  - El campo Y muestra valores que comienzan con 6 (NORTE)
+      // Internamente seguimos usando la convención x = NORTE, y = ESTE
+      let este = valorX;
+      let norte = valorY;
 
-      // Validar que X (NORTE) comience con 6 (rango 6000000-6999999)
-      if (x < 6000000 || x >= 7000000) {
-        alert('⚠️ ERROR: La coordenada X (NORTE) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
+      // Validar que el ESTE comience con 2 (rango 2000000-2999999)
+      if (este < 2000000 || este >= 3000000) {
+        alert('⚠️ ERROR: La coordenada del primer campo (X) debe comenzar con 2\nRango válido: 2000000 - 2999999\nEjemplo: 2492370.69');
         ix.focus();
         return;
       }
 
-      // Convertir si es POSGAR 94
+      // Validar que el NORTE comience con 6 (rango 6000000-6999999)
+      if (norte < 6000000 || norte >= 7000000) {
+        alert('⚠️ ERROR: La coordenada del segundo campo (Y) debe comenzar con 6\nRango válido: 6000000 - 6999999\nEjemplo: 6677723.20');
+        iy.focus();
+        return;
+      }
+
+      // Convertir si es POSGAR 94 (primero ESTE, luego NORTE)
       if (sistema === 'posgar94') {
         const metodoSeleccionado = document.getElementById('metodoTransformacionPermiso').value;
-        const convertido = convertirPOSGAR94a2007(y, x, metodoSeleccionado);
-        y = convertido.este07;
-        x = convertido.norte07;
-        alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\nMétodo: ${metodoSeleccionado}\n\nESTE: ${y.toFixed(2)}\nNORTE: ${x.toFixed(2)}`);
+        const convertido = convertirPOSGAR94a2007(este, norte, metodoSeleccionado);
+        este = convertido.este07;
+        norte = convertido.norte07;
+        alert(`✅ Coordenadas convertidas de POSGAR 94 a POSGAR 2007:\nMétodo: ${metodoSeleccionado}\n\nESTE: ${este.toFixed(2)}\nNORTE: ${norte.toFixed(2)}`);
       }
 
       // Validar el punto con el nuevo sistema
-      // Importante: validar_punto.php espera (X=ESTE, Y=NORTE)
-      validarPuntoDentroLimite(x, y, function(valido, color, estado) {
+      // validar_punto.php espera (x = NORTE, y = ESTE)
+      validarPuntoDentroLimite(norte, este, function(valido, color, estado) {
         if (valido) {
           // Punto válido - agregar a la lista con información de estado
-          puntos.push({x, y, z: 0, color: color, estado: estado});
+          puntos.push({x: norte, y: este, z: 0, color: color, estado: estado});
           actualizarListaPuntos();
           dibujarPoligono();
-          document.getElementById("x").value = '0.00';
-          document.getElementById("y").value = '0.00';
+          actualizarSuperficieCalculada();
+          document.getElementById("x").value = '';
+          document.getElementById("y").value = '';
           
           // Actualizar automáticamente la condición 1 si todos los puntos están dentro
           verificarCondicion1();
@@ -450,12 +468,17 @@ if (!isset($_SESSION['usuario'])) {
     }
 
     function validarCoordenadaEnTiempoReal() {
-      const x = parseFloat(document.getElementById("x").value);
-      const y = parseFloat(document.getElementById("y").value);
+      const valorX = parseFloat(document.getElementById("x").value);
+      const valorY = parseFloat(document.getElementById("y").value);
+
+      // Mismo criterio que en agregarPunto: X = ESTE, Y = NORTE (para el usuario)
+      const este = valorX;
+      const norte = valorY;
       
       // Solo validar si ambas coordenadas tienen valores válidos
-      if (!isNaN(x) && !isNaN(y) && x > 0 && y > 0) {
-        validarPuntoDentroLimiteSilencioso(x, y, function(valido, mensaje, color, estado) {
+      if (!isNaN(este) && !isNaN(norte) && este > 0 && norte > 0) {
+        // validar_punto.php recibe (x = NORTE, y = ESTE)
+        validarPuntoDentroLimiteSilencioso(norte, este, function(valido, mensaje, color, estado) {
           mostrarEstadoValidacion(valido, mensaje, color, estado);
         });
       } else {
@@ -533,11 +556,28 @@ if (!isset($_SESSION['usuario'])) {
       map.fitBounds(poligonoLayer.getBounds());
     }
 
+    function actualizarSuperficieCalculada() {
+      const campoSuperficie = document.getElementById('sup_calc_ha');
+
+      if (!campoSuperficie) {
+        return;
+      }
+
+      if (puntos.length < 3) {
+        campoSuperficie.value = '';
+        return;
+      }
+
+      const areaM2 = Math.abs(calcularAreaConSigno(puntos));
+      campoSuperficie.value = (areaM2 / 10000).toFixed(4);
+    }
+
     function eliminarUltimoPunto(event) {
       event.preventDefault();
       if (puntos.length === 0) return;
       puntos.pop();
       actualizarListaPuntos();
+        actualizarSuperficieCalculada();
       if (puntos.length >= 3) dibujarPoligono();
       else if (poligonoLayer) {
         map.removeLayer(poligonoLayer);
@@ -549,6 +589,7 @@ if (!isset($_SESSION['usuario'])) {
       if (confirm(`¿Está seguro de eliminar el vértice ${indice + 1}?`)) {
         puntos.splice(indice, 1);
         actualizarListaPuntos();
+          actualizarSuperficieCalculada();
         if (puntos.length >= 3) dibujarPoligono();
         else if (poligonoLayer) {
           map.removeLayer(poligonoLayer);
@@ -573,6 +614,7 @@ if (!isset($_SESSION['usuario'])) {
        
          // Validar secuencia horaria de puntos (no bloqueante)
          validarSecuenciaHoraria();
+      actualizarSuperficieCalculada();
       
       if (puntos.length < 3) {
         alert("Debe agregar al menos 3 puntos para formar un polígono.");
@@ -582,51 +624,38 @@ if (!isset($_SESSION['usuario'])) {
       return true;
     }
 
+    // Botón específico para dar por finalizada el área de exploración,
+    // similar al flujo de "FINALIZAR PERTENENCIA" en Petición de Mensura.
+    function finalizarAreaExploracion() {
+      if (puntos.length < 3) {
+        alert("Debe agregar al menos 3 puntos para formar un polígono de área de exploración.");
+        return;
+      }
+
+      // Aplicar las mismas validaciones geométricas (noroeste + sentido horario)
+      validarSecuenciaHoraria();
+
+      // Guardar los puntos actuales en el campo oculto
+      document.getElementById("puntos").value = JSON.stringify(puntos);
+
+      // Marcar la condición de secuencia correcta (cond2) como verificada
+      const condSecuencia = document.getElementById('cond2');
+      if (condSecuencia) {
+        condSecuencia.checked = true;
+      }
+      verificarTodos();
+
+      alert("✅ Área de exploración finalizada correctamente.\n\nAhora puede completar/revisar el resto del formulario y presionar 'Enviar Formulario' para guardar todo en la base de datos.");
+    }
+
     // Función para validar la secuencia horaria de puntos
+    // Nota: igual que en Manifestación, desactivamos la validación
+    // automática para NO cambiar el orden de los vértices al enviar
+    // o al presionar "Finalizar Área de Exploración".
+    // La verificación y corrección quedan a cargo de los botones
+    // "Validar Secuencia" y "Corregir Orden" que el usuario usa
+    // explícitamente cuando lo necesita.
     function validarSecuenciaHoraria() {
-        if (puntos.length < 3) return true;
-        
-        // Para 4 puntos, verificar si están en el orden correcto: V3→V1→V4→V2
-        if (puntos.length === 4) {
-          if (confirm(`⚠️ POLÍGONO DE 4 PUNTOS DETECTADO:\n\n` +
-                 `Para evitar la forma de "reloj de arena", el orden correcto debe ser:\n` +
-                 `V3 → V1 → V4 → V2\n\n` +
-                 `¿Desea aplicar automáticamente el orden correcto y continuar con el envío?`)) {
-            corregirSecuenciaCompleta();
-          }
-          return true;
-        }
-        
-        // Para otros casos, usar validación original
-        
-        // 1. Encontrar el punto más al noroeste
-        let puntoNoroeste = 0;
-        for (let i = 1; i < puntos.length; i++) {
-            if (puntos[i].y > puntos[puntoNoroeste].y || 
-                (puntos[i].y === puntos[puntoNoroeste].y && puntos[i].x < puntos[puntoNoroeste].x)) {
-                puntoNoroeste = i;
-            }
-        }
-        
-        // 2. Verificar si el primer punto es el noroeste
-        if (puntoNoroeste !== 0) {
-          if (confirm(`⚠️ ADVERTENCIA: El primer punto no es el más al NOROESTE.\n\nEl punto más al noroeste está en la posición ${puntoNoroeste + 1}:\n` +
-                 `ESTE: ${puntos[puntoNoroeste].x}, NORTE: ${puntos[puntoNoroeste].y}\n\n` +
-                 `¿Desea reordenar automáticamente los puntos comenzando desde el noroeste y continuar con el envío?`)) {
-            reordenarDesdePuntoNoroeste(puntoNoroeste);
-          }
-        }
-        
-        // 3. Verificar orientación horaria
-        const area = calcularAreaConSigno(puntos);
-        if (area > 0) {
-          if (confirm(`⚠️ ADVERTENCIA: Los puntos están en sentido ANTIHORARIO.\n\n` +
-                 `Los vértices deben seguir el sentido HORARIO (como las manecillas del reloj).\n\n` +
-                 `¿Desea invertir automáticamente el orden de los puntos y continuar con el envío?`)) {
-            invertirOrdenPuntos();
-          }
-        }
-        
         return true;
     }
     
@@ -647,6 +676,7 @@ if (!isset($_SESSION['usuario'])) {
         puntos = nuevosDesdeNoroeste;
         actualizarListaPuntos();
         dibujarPoligono();
+      actualizarSuperficieCalculada();
         alert(`✅ Puntos reordenados. Ahora comienzan desde el vértice noroeste.\n\nPor favor revise la secuencia y vuelva a enviar.`);
     }
     
@@ -658,6 +688,7 @@ if (!isset($_SESSION['usuario'])) {
             puntos = [primero, ...resto];
             actualizarListaPuntos();
             dibujarPoligono();
+            actualizarSuperficieCalculada();
             alert(`✅ Orden de puntos invertido a sentido horario.\n\nPor favor revise la secuencia y vuelva a enviar.`);
         }
     }
@@ -801,6 +832,7 @@ if (!isset($_SESSION['usuario'])) {
         // 3. Actualizar interfaz
         actualizarListaPuntos();
         dibujarPoligono();
+        actualizarSuperficieCalculada();
         
         // 4. Mostrar resultado
         if (cambiosRealizados.length > 0) {
